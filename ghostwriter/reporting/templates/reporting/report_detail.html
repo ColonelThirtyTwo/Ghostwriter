@@ -318,6 +318,27 @@
       <p>No findings have been added to this report yet.</p>
     {% endif %}
 
+    <h4>Additional Report Content</h4>
+    <hr>
+
+    <ul class="list-group">
+        {% if report.extrareportcontext_set.all %}
+            {% for content in report.extrareportcontext_set.all %}
+                <li class="list-group-item d-flex justify-content-between align-items-center">
+                    {{ content.context_type.title }} ({{ content.context_type.name }})
+                    <span class="badge badge-primary badge-pill">
+                        {% if content.context_type.content_type == "richtext" %}RichText
+                        {% elif content.context_type.content_type == "json" %}JSON
+                        {% elif content.context_type.content_type == "boolean" %}Bool
+                        {% else %}Text{% endif %}
+                    </span>
+                </li>
+            {% endfor %}
+        {% else %}
+            <li class="list-group-item">No additional report content has been added yet.</li>
+        {% endif %}
+    </ul>
+
     {% comment %} Generate Report Sections {% endcomment %}
     <h4>Generate Reports</h4>
     <hr>
