@@ -8,7 +8,7 @@ import os
 # Django Imports
 from django.conf import settings
 from django.core.files.storage import FileSystemStorage
-from django.core.validators import MinValueValidator
+from django.core.validators import MinValueValidator, RegexValidator
 from django.db import models
 from django.urls import reverse
 
@@ -658,3 +658,140 @@ class LocalFindingNote(models.Model):
 
     def __str__(self):
         return f"{self.finding} {self.timestamp}: {self.note}"
+
+
+# Validator for the ``name`` fields of :model:`reporting.ExtraReportContext` and :model:`reporting.ExtraReportContextLink`
+slug_regex = RegexValidator(
+    regex=r"^[a-z0-9]+(?:[a-z0-9_-]+)*$",
+    message="This identifier can only be made up of lowercase letters, numbers, underscores, and hyphens.",
+)
+
+extra_context_types = (
+    ("richtext", "RichText Section"),
+    ("variable", "Text Variable"),
+    ("boolean", "Boolean Variable"),
+    ("json", "JSON Blob"),
+)
+
+
+class ExtraReportContextType(models.Model):
+    """
+    Stores additional context data to be add information and variables to rendered reports.
+    """
+
+    # Base fields that will be copied to cloned entries for individual reports
+    name = models.CharField(
+        validators=[slug_regex],
+        max_length=50,
+        unique=True,
+        help_text="Unique identifier for this field to be used inside report templates (formatted like a slug)",
+    )
+    title = models.CharField(
+        "Title",
+        max_length=255,
+        help_text="Provide a descriptive title for this section that can also be used in a report template",
+    )
+    description = models.TextField(
+        "Description",
+        null=True,
+        blank=True,
+        help_text="Provide a description for this section (e.g., how it should be used, why it was created)",
+    )
+    # Boolean values that only matter for this model
+    default = models.BooleanField(
+        "Default",
+        default=False,
+        help_text="Check this box if this section should be included in all reports by default",
+    )
+    protected = models.BooleanField(
+        "Protected",
+        default=False,
+        help_text="Make it so only administrators and managers can edit this section configuration",
+    )
+    # Content type choices and defaults
+    content_type = models.CharField(
+        "Content Type",
+        max_length=8,
+        choices=extra_context_types,
+        default="richtext",
+        help_text="Select the type of value you want to create",
+    )
+    default_variable = models.CharField(
+        "Default Value",
+        max_length=255,
+        null=True,
+        blank=True,
+        help_text="Set the default content for a report variable",
+    )
+    default_boolean = models.BooleanField(
+        "Default Value",
+        default=False,
+        help_text="Set the default value for a boolean variable",
+    )
+    default_richtext = models.TextField(
+        "Default Content",
+        null=True,
+        blank=True,
+        help_text="Provide default content for a RichText section",
+    )
+    default_json = models.JSONField(
+        "Default Content",
+        null=True,
+        blank=True,
+        help_text="Provide default content for a JSON blob",
+    )
+
+    class Meta:
+        ordering = ["content_type", "title", "name"]
+        verbose_name = "Extra report context type"
+        verbose_name_plural = "Extra report context type"
+
+    def __str__(self):
+        return f"{self.content_type} : {self.title} ({self.name})"
+
+    def get_absolute_url(self):
+        return reverse("reporting:report_section_detail", args=[str(self.id)])
+
+
+class ExtraReportContext(models.Model):
+    """
+    Stores a new report variable based on :model:`reporting.ExtraReportContextType`
+    to be added to a related :model:`reporting.Report`.
+    """
+
+    variable_content = models.CharField(
+        "Content",
+        max_length=255,
+        null=True,
+        blank=True,
+        help_text="Set the content for this report variable",
+    )
+    boolean_value = models.BooleanField(
+        "Value",
+        default=False,
+        help_text="Set the value for this boolean variable",
+    )
+    richtext_content = models.TextField(
+        "Content",
+        null=True,
+        blank=True,
+        help_text="Provide the content for this report section",
+    )
+    json_content = models.JSONField(
+        "Default Content",
+        null=True,
+        blank=True,
+        help_text="Provide the JSON content this report variable",
+    )
+    # Foreign Keys
+    report = models.ForeignKey("Report", on_delete=models.CASCADE)
+    context_type = models.ForeignKey("ExtraReportContextType", on_delete=models.CASCADE)
+
+    class Meta:
+        ordering = ["report", "context_type__content_type", "context_type__name"]
+        verbose_name = "Extra report context"
+        verbose_name_plural = "Extra report context"
+        unique_together = ("report", "context_type",)
+
+    def __str__(self):
+        return f"{self.context_type}"

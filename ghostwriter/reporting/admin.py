@@ -12,6 +12,8 @@ from ghostwriter.reporting.models import (
     Archive,
     DocType,
     Evidence,
+    ExtraReportContext,
+    ExtraReportContextType,
     Finding,
     FindingNote,
     FindingType,
@@ -258,3 +260,58 @@ class ReportTemplateAdmin(admin.ModelAdmin):
 
     def tag_list(self, obj):
         return ", ".join(o.name for o in obj.tags.all())
+
+
+@admin.register(ExtraReportContextType)
+class ExtraReportContextTypeAdmin(admin.ModelAdmin):
+    list_display = ("title", "name", "content_type", "default",)
+    list_filter = ("content_type", "default",)
+    list_editable = ("default",)
+    list_display_links = ("title", "name",)
+    fieldsets = (
+        (
+            "Identification",
+            {
+                "fields": ("title", "name", "content_type", "description",),
+            },
+        ),
+        (
+            "Options",
+            {
+                "fields": (
+                    "default",
+                    "protected",
+                )
+            },
+        ),
+        (
+            "Default Content",
+            {"fields": ("default_boolean", "default_variable", "default_richtext", "default_json")},
+        ),
+    )
+
+
+@admin.register(ExtraReportContext)
+class ExtraReportContextAdmin(admin.ModelAdmin):
+    list_display = ("context_type", "report",)
+    list_filter = ("context_type__content_type", "report__complete",)
+    list_display_links = ("context_type",)
+    fieldsets = (
+        (
+            "Report and Context Type",
+            {
+                "fields": ("report", "context_type",),
+            },
+        ),
+        (
+            "Content",
+            {
+                "fields": (
+                    "boolean_value",
+                    "variable_content",
+                    "richtext_content",
+                    "json_content",
+                )
+            },
+        ),
+    )
