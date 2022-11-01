@@ -19,6 +19,7 @@ from django.conf import settings
 from django.utils.dateformat import format as dateformat
 
 # 3rd Party Libraries
+from asgiref.sync import sync_to_async
 import docx
 import jinja2
 import jinja2.sandbox
@@ -46,7 +47,7 @@ from xlsxwriter.workbook import Workbook
 from ghostwriter.commandcenter.models import CompanyInformation, ReportConfiguration
 from ghostwriter.modules.custom_serializers import ReportDataSerializer
 from ghostwriter.modules.exceptions import InvalidFilterValue
-from ghostwriter.modules.linting_utils import LINTER_CONTEXT
+from ghostwriter.modules.linting_utils import update_linter_context
 from ghostwriter.reporting.models import Evidence
 
 # Using __name__ resolves to ghostwriter.modules.reporting
@@ -1551,6 +1552,9 @@ class Reportwriter:
         # Render the Word document + auto-escape any unsafe XML/HTML
         self.word_doc.render(context, self.jinja_env, autoescape=True)
 
+        # Render once more to ensure rendering of variables inside subdocs
+        self.word_doc.render(context, self.jinja_env, autoescape=True)
+
         # Return the final rendered document
         return self.word_doc
 
@@ -1661,6 +1665,11 @@ class Reportwriter:
                 if isinstance(asset, dict):
                     if asset["note"]:
                         asset["note_rt"] = render_subdocument(asset["note"], finding=None, p_style=p_style)
+
+        # Extra RichText content
+        for extra in context["extras"]:
+            if extra["content_type"] == "richtext":
+                context[f"{extra['name']}_rt"] = render_subdocument(extra["value"], finding=None)
 
         return context
 
@@ -2201,6 +2210,7 @@ class TemplateLinter:
     def __init__(self, template):
         self.template = template
         self.template_loc = template.document.path
+        self.linter_context = update_linter_context()
         self.jinja_template_env = prepare_jinja2_env(debug=True)
 
     def lint_docx(self):
@@ -2255,7 +2265,9 @@ class TemplateLinter:
 
                     # Step 3: Test rendering the document
                     try:
-                        template_document.render(LINTER_CONTEXT, self.jinja_template_env, autoescape=True)
+                        template_document.render(
+                            self.linter_context, self.jinja_template_env, autoescape=True
+                        )
                         undefined_vars = template_document.undeclared_template_variables
                         if undefined_vars:
                             for variable in undefined_vars:
