@@ -1,5 +1,8 @@
 """This contains utilities and values used by the ``TemplateLinter`` class."""
 
+# Ghostwriter Libraries
+from ghostwriter.reporting.models import ExtraReportContextType
+
 # Example JSON reporting data for loading into templates for rendering tests
 LINTER_CONTEXT = {
     "report_date": "Mar. 25, 2021",
@@ -462,3 +465,18 @@ LINTER_CONTEXT = {
     },
     "tools": ["beacon", "covenant", "mythic", "poseidon"],
 }
+
+
+def update_linter_context():
+    """Generate a context for the linter to use."""
+
+    context = LINTER_CONTEXT.copy()
+    context["extras"] = {}
+    context_types = ExtraReportContextType.objects.all()
+    for context_type in context_types:
+        context[context_type.name] = context_type.name
+        if context_type.content_type == "richtext":
+            context[f"{context_type.name}_rt"] = ""
+    LINTER_CONTEXT.update(context)
+
+    return LINTER_CONTEXT
