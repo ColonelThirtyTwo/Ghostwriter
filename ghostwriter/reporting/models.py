@@ -137,6 +137,10 @@ class FindingType(models.Model):
 class Finding(models.Model):
     """Stores an individual finding, related to :model:`reporting.Severity` and :model:`reporting.FindingType`."""
 
+    class Positivity(models.TextChoices):
+        POSITIVE = "positive", "Positive"
+        NEGATIVE = "negative", "Negative"
+
     title = models.CharField(
         "Title",
         max_length=255,
@@ -204,6 +208,13 @@ class Finding(models.Model):
         max_length=54,
         help_text="Set the CVSS vector for this finding",
     )
+    positivity = models.CharField(
+        "Finding Positivity",
+        choices=Positivity.choices,
+        default=Positivity.NEGATIVE,
+        max_length=24,
+        help_text="Whether this is a positive or negative finding",
+    )
     tags = TaggableManager(blank=True)
     # Foreign Keys
     severity = models.ForeignKey(
@@ -226,6 +237,10 @@ class Finding(models.Model):
 
     def get_absolute_url(self):
         return reverse("reporting:finding_detail", args=[str(self.id)])
+
+    @property
+    def positivity_object(self):
+        return self.Positivity(self.positivity)
 
     def __str__(self):
         return f"[{self.severity}] {self.title}"

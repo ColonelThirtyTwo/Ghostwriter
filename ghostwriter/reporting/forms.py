@@ -87,14 +87,16 @@ class FindingForm(forms.ModelForm):
                 css_class="form-row",
             ),
             Row(
-                Column("finding_type", css_class="form-group col-md-6 mb-0"),
-                Column("severity", css_class="form-group col-md-6 mb-0"),
+                Column("positivity", css_class="form-group col-md-4 mb-0"),
+                Column("finding_type", css_class="form-group col-md-4 mb-0"),
+                Column("severity", css_class="form-group col-md-4 mb-0"),
                 css_class="form-row",
             ),
             Row(
                 Column("cvss_score", css_class="form-group col-md-6 mb-0"),
                 Column("cvss_vector", css_class="form-group col-md-6 mb-0"),
                 css_class="form-row",
+                id="row_cvss_score",
             ),
             Accordion(
                 AccordionGroup(
@@ -203,6 +205,7 @@ class FindingForm(forms.ModelForm):
                     active=False,
                     template="accordion_group.html",
                 ),
+                css_id="row_cvss_calculator",
             ),
             HTML(
                 """

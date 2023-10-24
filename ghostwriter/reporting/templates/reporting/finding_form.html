@@ -84,10 +84,23 @@
 
 {%  block morescripts %}
     <script>
-      {%  comment %} Prepare CVSS calculator {% endcomment %}
-      $(document).ready(function () {
-        prepareCVSSCalc()
-      });
+        {%  comment %} Prepare CVSS calculator {% endcomment %}
+        $(document).ready(function () {
+            prepareCVSSCalc();
+        });
+
+        $(document).ready(function () {
+            $("#id_positivity").on("change", function() {
+                var value = $("#id_positivity").val()
+                if(value == "positive") {
+                    $("#row_cvss_score").hide();
+                    $("#row_cvss_calculator").hide();
+                } else {
+                    $("#row_cvss_score").show();
+                    $("#row_cvss_calculator").show();
+                }
+            });
+        });
     </script>
 {% endblock %}
 

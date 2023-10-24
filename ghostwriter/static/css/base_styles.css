@@ -88,6 +88,8 @@
   --high-rating-color: #FF7E79;
   --crit-rating-color: #966FD6;
   --neutral-rating-color: #7a7a7a;
+  --positive-color: #A8D08D;
+  --negative-color: #FF7E79;
 
   /* BRANDS */
   --word-color: #185abd;
