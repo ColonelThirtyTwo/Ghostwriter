@@ -7,7 +7,7 @@ from django.db import migrations, models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('reporting', '0032_extrareportcontext_extrareportcontexttype'),
+        ('reporting', '0043_extrareportcontext_extrareportcontexttype'),
     ]
 
     operations = [
