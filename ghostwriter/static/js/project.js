@@ -159,16 +159,6 @@ function hamburger(x) {
     x.classList.toggle('change');
 }
 
-// Prepare the CVSS calculator for findings
-function prepareCVSSCalc() {
-    let cvss = document.getElementById('id_cvss_vector')
-    if (cvss != null) {
-        ParseVector(cvss.value);
-        CVSSAutoCalc();
-        console.log('CVSS calculator is ready')
-    }
-}
-
 // Show/hide a given table row and toggle the given button's ``open`` class
 function showHideRow(btn, row) {
     btn.toggleClass('open');
