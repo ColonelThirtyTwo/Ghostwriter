@@ -1,10 +1,6 @@
 {% extends "base_generic.html" %}
 
-{% load crispy_forms_tags %}
-
-{% load bleach_tags %}
-
-{% load custom_tags %}
+{% load crispy_forms_tags bleach_tags custom_tags static %}
 
 {% block pagetitle %}Finding Entry{% endblock %}
 
@@ -238,4 +234,7 @@
 
   {% comment %} Include the reusable delete confirmation modal and related scripts {% endcomment %}
   {% include "confirm_delete_modal.html" %}
+
+  <link rel="stylesheet" href="{% static 'assets/forms.css' %}">
+  <script type="module" src="{% static 'assets/forms.js' %}"></script>
 {% endblock %}

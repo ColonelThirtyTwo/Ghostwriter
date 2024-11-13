@@ -478,6 +478,7 @@ $(document).ready(function() {
         $('.oplog-form-div').load(url, function() {
             $('#edit-modal').modal('toggle');
             formAjaxSubmit('#oplog-entry-form', '#edit-modal');
+            gwInitializeForms(document.getElementById("edit-modal"));
         });
         return false;
     });

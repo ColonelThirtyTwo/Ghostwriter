@@ -1,5 +1,5 @@
 {% extends "base_generic.html" %}
-{% load crispy_forms_tags %}
+{% load crispy_forms_tags static %}
 
 {% block pagetitle %}Project Form{% endblock %}
 
@@ -50,14 +50,6 @@
 
   <!-- Form Section -->
   {% crispy form form.helper %}
-{% endblock %}
-
-{% block tabs %}
-  {{ block.super }}
-{% endblock %}
-
-{% block tabforms %}
-  {{ block.super }}
 {% endblock %}
 
 {% block morescripts %}
@@ -184,4 +176,7 @@
       obj.checked = true;
     }
   </script>
+
+  <link rel="stylesheet" href="{% static 'assets/forms.css' %}">
+  <script type="module" src="{% static 'assets/forms.js' %}"></script>
 {% endblock %}

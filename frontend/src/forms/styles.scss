@@ -1,0 +1,7 @@
+@use "./tagify.scss" with (
+    $tag-pad: 0 0.5em,
+);
+
+.tagify {
+    text-align: left;
+}

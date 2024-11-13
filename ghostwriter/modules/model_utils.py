@@ -39,7 +39,7 @@ def to_dict(instance: django.db.models.Model, include_id: bool = False, resolve_
 
 
 def set_finding_positions(
-    instance: django.db.models.Model, old_pos: [int, None], old_sev: [int, None], new_pos: int, new_sev: int
+    instance: django.db.models.Model, old_pos: int | None, old_sev: int | None, new_pos: int, new_sev: int
 ) -> None:
     """
     Updates the ``position`` value for a finding in a report. This is used when a finding is moved to a new position or

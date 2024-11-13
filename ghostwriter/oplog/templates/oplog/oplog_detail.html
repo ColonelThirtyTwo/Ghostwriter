@@ -140,6 +140,7 @@
 
   {{ oplog_entry_extra_fields_spec_ser|json_script:"oplog_entry_extra_fields_spec" }}
 
-
+  <link rel="stylesheet" href="{% static 'assets/forms.css' %}">
+  <script type="module" src="{% static 'assets/forms.js' %}"></script>
 
 {% endblock %}

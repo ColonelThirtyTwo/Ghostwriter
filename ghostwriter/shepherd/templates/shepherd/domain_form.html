@@ -1,5 +1,5 @@
 {% extends "base_generic.html" %}
-{% load crispy_forms_tags %}
+{% load crispy_forms_tags static %}
 
 {% block pagetitle %}Domain Form{% endblock %}
 
@@ -33,4 +33,9 @@
 
     <!-- Form Section -->
     {% crispy form form.helper %}
+{% endblock %}
+
+{% block morescripts %}
+  <link rel="stylesheet" href="{% static 'assets/forms.css' %}">
+  <script type="module" src="{% static 'assets/forms.js' %}"></script>
 {% endblock %}
