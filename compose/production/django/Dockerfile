@@ -3,7 +3,7 @@ FROM node:21-alpine AS frontendbuild
 COPY ./frontend /app
 RUN cd /app && npm install && npm run build
 
-FROM python:3.10.9-alpine3.17
+FROM python:3.13.0-alpine3.20
 
 ENV PYTHONUNBUFFERED 1
 

@@ -144,6 +144,17 @@ services:
       name: ghostwriter_queue
     command: /start-queue
 
+  channel-workers:
+    <<: *django
+    image: ghostwriter_channel_workers
+    depends_on:
+      - redis
+      - postgres
+    labels:
+      name: ghostwriter_channel_workers
+    ports: []
+    command: python manage.py runworker yjs_save
+
   graphql_engine:
     build:
       context: .

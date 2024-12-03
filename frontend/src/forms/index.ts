@@ -1,11 +1,12 @@
-import Tagify from '@yaireo/tagify';
+import Tagify from "@yaireo/tagify";
 import "./styles.scss";
 
 function initializeForms(rootEl: HTMLElement | Document) {
     for (const el of rootEl.querySelectorAll("input[type=text].tagwidget")) {
         new Tagify(el as HTMLInputElement, {
             pattern: /^[^"]+$/,
-            originalInputValueFormat: arr => arr.map(item => `"${item.value}"`).join(","),
+            originalInputValueFormat: (arr) =>
+                arr.map((item) => `"${item.value}"`).join(","),
         });
     }
 }

@@ -27,12 +27,13 @@ os.environ.setdefault("DJANGO_SETTINGS_MODULE", "config.settings.local")
 django_application = get_asgi_application()
 
 # Import websocket application here, so apps from django_application are loaded first
+from ghostwriter.collab_model.consumers import YjsSaverWorkerConsumer, DEFAULT_WORKER_CHANNEL_NAME  # noqa isort:skip
 import ghostwriter.home.routing  # noqa isort:skip
 import ghostwriter.oplog.routing  # noqa isort:skip
 import ghostwriter.reporting.routing  # noqa isort:skip
 
 from channels.auth import AuthMiddlewareStack  # noqa isort:skip
-from channels.routing import ProtocolTypeRouter, URLRouter  # noqa isort:skip
+from channels.routing import ProtocolTypeRouter, URLRouter, ChannelNameRouter  # noqa isort:skip
 
 
 application = ProtocolTypeRouter(
@@ -46,6 +47,11 @@ application = ProtocolTypeRouter(
                     + ghostwriter.reporting.routing.websocket_urlpatterns
                 )
             )
+        ),
+        "channel": ChannelNameRouter(
+            {
+                DEFAULT_WORKER_CHANNEL_NAME: YjsSaverWorkerConsumer.as_asgi(),
+            }
         ),
     }
 )

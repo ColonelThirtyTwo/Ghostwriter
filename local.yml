@@ -113,6 +113,17 @@ services:
     ports: []
     command: /start-queue
 
+  channel-workers:
+    <<: *django
+    image: ghostwriter_channel_workers
+    depends_on:
+      - redis
+      - postgres
+    labels:
+      name: ghostwriter_channel_workers
+    ports: []
+    command: python manage.py runworker yjs_save
+
   frontend:
     image: node:21-alpine
     volumes:

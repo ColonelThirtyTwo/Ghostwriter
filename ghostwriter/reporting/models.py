@@ -15,7 +15,11 @@ from django.urls import reverse
 
 # 3rd Party Libraries
 from cvss import CVSS3, CVSS4
+from ghostwriter.collab_model.models.ydocmodel import YDocModel, YField
+from ghostwriter.collab_model.models.copiers import copy_tags
+from ghostwriter.collab_model.models.extra_fields import YExtraFields
 from taggit.managers import TaggableManager
+import pycrdt
 
 # Ghostwriter Libraries
 from ghostwriter.reporting.validators import validate_evidence_extension
@@ -873,38 +877,63 @@ class LocalFindingNote(models.Model):
         return f"{self.finding} {self.timestamp}: {self.note}"
 
 
-class Observation(models.Model):
+class Observation(YDocModel):
     """
     An observation.
 
     Similar to a finding, but more generic. Can be used for positive observations or other things.
     """
 
-    title = models.CharField(
-        "Title",
-        max_length=255,
-        unique=True,
-        help_text="Enter a title for this finding that will appear in reports",
-    )
-    description = models.TextField(
-        "Description",
+    stored_title = models.TextField("Title", editable=False, blank=True)
+    title = YField(
+        ["plain_fields", "title"],
+        str,
+        copy_to_field="stored_title",
+        verbose_name="Title",
         default="",
-        blank=True,
-        help_text="Provide a description for this observation that introduces it",
     )
-    tags = TaggableManager(blank=True)
-    extra_fields = models.JSONField(default=dict)
+
+    description = YField(
+        "description",
+        pycrdt.XmlFragment,
+        verbose_name="Description",
+    )
+
+    stored_tags = TaggableManager(blank=True)
+    tags = YField(
+        "tags",
+        pycrdt.Map,
+        verbose_name="Tags",
+        copy_to_field=copy_tags,
+        copy_to_field_after_save=True,
+    )
+
+    extra_fields = YExtraFields()
 
     class Meta:
-        ordering = ["title"]
+        ordering = ["stored_title"]
         verbose_name = "Observation"
         verbose_name_plural = "Observations"
 
     def __str__(self):
-        return str(self.title)
+        return str(self.stored_title)
 
     def get_absolute_url(self):
         return reverse("reporting:observation_detail", args=[str(self.id)])
+
+    @classmethod
+    def user_can_create(cls, user) -> bool:
+        # TODO: dynamic import to fix circular reference. Should refactor utils.py...
+        from ghostwriter.api.utils import verify_observation_access
+        return verify_observation_access(user, "create")
+
+    def user_can_edit(self, user) -> bool:
+        from ghostwriter.api.utils import verify_observation_access
+        return verify_observation_access(user, "edit")
+
+    def user_can_delete(self, user) -> bool:
+        from ghostwriter.api.utils import verify_observation_access
+        return verify_observation_access(user, "delete")
 
 
 class ReportObservationLink(models.Model):

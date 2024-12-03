@@ -12,9 +12,29 @@
     },
     "editor.formatOnSave": true,
     "[javascript]": {
-        "editor.formatOnSave": false
+        "editor.defaultFormatter": "esbenp.prettier-vscode",
+        "editor.tabSize": 4
+    },
+    "[typescript]": {
+        "editor.defaultFormatter": "esbenp.prettier-vscode",
+        "editor.tabSize": 4
+    },
+    "[typescriptreact]": {
+        "editor.defaultFormatter": "esbenp.prettier-vscode",
+        "editor.tabSize": 4
+    },
+    "[css]": {
+        "editor.defaultFormatter": "esbenp.prettier-vscode",
+        "editor.tabSize": 4
+    },
+    "[scss]": {
+        "editor.defaultFormatter": "esbenp.prettier-vscode",
+        "editor.tabSize": 4
     },
     "[html]": {
+        "editor.formatOnSave": false
+    },
+    "[django-html]": {
         "editor.formatOnSave": false
     },
     "files.trimTrailingWhitespace": true,
@@ -120,4 +140,6 @@
         "xforce",
         "xlsxwriter"
     ],
+    "prettier.requireConfig": true,
+    "prettier.configPath": "frontend/.prettierrc",
 }

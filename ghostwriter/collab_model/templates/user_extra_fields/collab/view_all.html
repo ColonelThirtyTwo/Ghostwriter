@@ -1,0 +1,43 @@
+{% if object.extra_fields %}
+  <h4 class="icon custom-field-icon">Extra Fields</h4>
+  <hr>
+
+  {% for field_spec, value in object.extra_fields %}
+    {% if field_spec.type != "rich_text" and field_spec.type != "json" %}
+      <div class="row justify-content-md-center">
+        <h6 class="col-3 text-left">
+          {{ field_spec.display_name }}
+        </h6>
+        <div class="mt-2 col-3 text-md-center align-middle offset-2">
+          {% include "user_extra_fields/collab/view_value.html" with field_spec=field_spec value=value %}
+        </div>
+      </div>
+    {% endif %}
+  {% endfor %}
+
+  {% for field_spec, value in object.extra_fields %}
+    {% if field_spec.type == "rich_text" %}
+      <div id="extraFieldCard_{{ field_spec.internal_name }}" class="card mb-3">
+        <div class="card-header finding-header icon custom-field-icon">
+          {{ field_spec.display_name }}
+        </div>
+        <div class="card-body finding-content">
+          {% include "user_extra_fields/collab/view_value.html" with field_spec=field_spec value=value %}
+        </div>
+      </div>
+    {% endif %}
+  {% endfor %}
+
+  {% for field_spec, value in object.extra_fields %}
+    {% if field_spec.type == "json" %}
+      <div id="extraFieldCard_{{ field_spec.internal_name }}" class="card mb-3">
+        <div class="card-header finding-header icon custom-field-icon">
+          {{ field_spec.display_name }}
+        </div>
+        <div class="card-body finding-content">
+          {% include "user_extra_fields/collab/view_value.html" with field_spec=field_spec value=value %}
+        </div>
+      </div>
+    {% endif %}
+  {% endfor %}
+{% endif %}

@@ -1,4 +1,4 @@
-FROM python:3.10.9-alpine3.17
+FROM python:3.13.0-alpine3.20
 
 ENV PYTHONUNBUFFERED 1
 
@@ -18,14 +18,16 @@ RUN apk --no-cache add build-base curl \
     && apk --no-cache add gettext \
     # https://docs.djangoproject.com/en/dev/ref/django-admin/#dbshell
     && apk --no-cache add postgresql-client \
-    # Rust and Cargo required by the ``cryptography`` Python package
-    && apk --no-cache add rust \
-    && apk --no-cache add cargo \
+    # Rust required by the `cryptography` and `pycrdt` Python package
+    && apk --no-cache add rustup \
     && pip install --no-cache-dir -U setuptools pip
+
+# Latest rust version as of writing, upgrade if desired/needed and it doesn't cause problems
+RUN rustup-init -y --default-toolchain 1.82.0 --profile minimal
 
 COPY ./requirements /requirements
 
-RUN pip install --no-cache-dir -r /requirements/local.txt
+RUN source "$HOME/.cargo/env" && pip install --no-cache-dir -r /requirements/local.txt
 
 COPY ./compose/production/django/entrypoint /entrypoint
 

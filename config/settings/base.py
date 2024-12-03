@@ -116,6 +116,7 @@ THIRD_PARTY_APPS = [
 
 LOCAL_APPS = [
     "ghostwriter.users.apps.UsersConfig",
+    "ghostwriter.collab_model.apps.CollabModelApp",
     "ghostwriter.home.apps.HomeConfig",
     "ghostwriter.rolodex.apps.RolodexConfig",
     "ghostwriter.shepherd.apps.ShepherdConfig",

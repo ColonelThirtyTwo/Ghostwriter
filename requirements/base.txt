@@ -45,3 +45,5 @@ psutil==6.0.0
 django-taggit==6.0.0
 croniter==3.0.3
 cvss==3.2
+pycrdt==0.10.7
+pycrdt-websocket==0.15.1

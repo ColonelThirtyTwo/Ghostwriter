@@ -268,15 +268,16 @@ class ReportTemplateAdmin(admin.ModelAdmin):
         return ", ".join(o.name for o in obj.tags.all())
 
 
-@admin.register(Observation)
-class ObservationAdmin(ImportExportModelAdmin):
-    resource_class = ObservationResource
-    list_display = (
-        "title",
-        "tag_list",
-    )
-    list_filter = ("tags",)
-    list_display_links = ("title",)
-
-    def tag_list(self, obj):
-        return ", ".join(o.name for o in obj.tags.all())
+# TODO: rewrite this
+#@admin.register(Observation)
+#class ObservationAdmin(ImportExportModelAdmin):
+#    resource_class = ObservationResource
+#    list_display = (
+#        "title",
+#        "tag_list",
+#    )
+#    list_filter = ("tags",)
+#    list_display_links = ("title",)
+#
+#    def tag_list(self, obj):
+#        return ", ".join(o.name for o in obj.tags.all())

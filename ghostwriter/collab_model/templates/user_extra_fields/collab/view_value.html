@@ -1,0 +1,34 @@
+
+{% load yjs extra_fields %}
+
+{% comment %}
+    Try to use the actual type of the value and not the spec unless needed - the
+    value stored may be from an old version of the spec.
+{% endcomment %}
+
+{% if value is None %}
+    No Value Set
+{% elif value|yjs_type == "str" and field_spec and field_spec.type == "json" %}
+    {% with value_json=value|yjs_try_parse_json %}
+        {% if value_json is not None %}
+            <pre><code id="jsonPreview"></code></pre>
+            <script>
+                $('#jsonPreview').jsonView({
+                    '{{ field_spec.display_name }}': {{ value|json_pretty|safe }}
+                })
+            </script>
+        {% else %}
+            {{ value }}
+        {% endif %}
+    {% endwith %}
+{% elif value|yjs_type == "XmlFragment" %}
+    {{value|yjs_xml_to_html}}
+{% elif value|yjs_type == "bool" %}
+    {% if value %}
+        <span class="align-middle healthy"><i class="fas fa-check"></i></span>
+    {% else %}
+        <span class="align-middle burned"><i class="fas fa-times"></i></span>
+    {% endif %}
+{% else %}
+    {{ value }}
+{% endif %}
