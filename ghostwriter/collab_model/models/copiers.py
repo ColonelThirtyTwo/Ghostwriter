@@ -1,6 +1,7 @@
 
-from ghostwriter.collab_model.models.ydocmodel import YDocModel, YField
 import pycrdt
+
+from ghostwriter.collab_model.models.ydocmodel import YDocModel, YField
 
 
 def copy_tags(_field: YField, instance: YDocModel, value: pycrdt.Map):

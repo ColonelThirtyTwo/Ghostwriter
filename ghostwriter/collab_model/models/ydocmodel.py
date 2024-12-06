@@ -18,6 +18,10 @@ V = TypeVar("V", bound=T)
 class History(models.Model):
     """
     Change of a `YDocModel`.
+
+    `YDocModel.save` will create an instance of this every time it saves with changes. It contains the YJS update
+    containing the delta between the previous History instance (or an empty document for the first instance) to
+    the current inststance, as well as the user who submitted it and the time it was submitted.
     """
 
     # IDs must be monotonically increasing, and is used to order history on an individual model.
@@ -56,6 +60,8 @@ class History(models.Model):
     ) -> pycrdt.Doc:
         """
         Gets a `pycrdt.Doc` with the state at the time of the last update at or until `until_id`.
+
+        If `until_id_inclusive` is True, the update at `until_id` is included, otherwise it is excluded.
         """
         doc = pycrdt.Doc()
         with doc.transaction():
@@ -77,7 +83,7 @@ class History(models.Model):
 
         That is, the returned doc will be the state of the doc before the `history_id` update.
 
-        You can add observers to the returend document then apply the returned `History.update`, and the observers will be called
+        You can add observers to the returned document then apply the returned `History.update`, and the observers will be called
         with the changes introduced in this history instance.
 
         If there is no `History` with the passed in `history_id`, returns None.
@@ -100,7 +106,7 @@ class YDocField(models.Field):
     """
     Django field for a yjs document.
 
-    The document's client id will be set to zero.
+    When retreived from this field, the document's client ID will be set to zero.
     """
     # Based off of Django's BinaryField
 
@@ -108,8 +114,8 @@ class YDocField(models.Field):
     empty_values = [None]
 
     def __init__(self, *args, **kwargs):
-        kwargs.setdefault("editable", False)
-        kwargs.setdefault("serialize", False)
+        kwargs["editable"] = False
+        kwargs["serialize"] = False
         super().__init__(*args, **kwargs)
 
     def deconstruct(self) -> Any:
@@ -161,8 +167,7 @@ class YDocModel(models.Model):
 
     * Rich text hardcoded fields are stored directly on the ydoc.
     * Non-rich-text hardcoded fields are stored in the `plain_fields` map.
-    * Rich text extra fields are stored directly on the ydoc as "extra_field_{internal_name}`.
-    * Non-rich-text extra fields are stored in the `extra_fields` map.
+    * User-defined extra fields are stored in the `extra_fields` map.
     """
 
     class Meta:
@@ -173,15 +178,36 @@ class YDocModel(models.Model):
     _state_vector_at_load: bytes | None
 
     def __init__(self, *args, **kwargs):
+        # We have to do a bunch of initialization here since Django's data model does not work well with YJS.
+        # Django does not pass defaults for YFields, as they don't have a backing column, and defaults for things
+        # like extra fields are a bit more complicated since they involve nested values.
 
-        # Set yfield defaults. Django doesn't do this since YFields are "virtual" and have no corresponding
-        # DB column, so we have to do it ourselves.
-        for i, field in enumerate(self._meta.concrete_fields):
-            if isinstance(field, YField) and field.has_default() and field.name not in kwargs and i >= len(args):
-                kwargs[field.name] = field.get_default()
+        # Convert args tuple into kwargs slots since it's much easier to keep track of
+        for i, val in enumerate(args):
+            try:
+                field = self._meta.concrete_fields[i]
+            except IndexError as e:
+                raise ValueError("Too many arguments to YDocModel init") from e
+            kwargs[field.name] = val
 
-        super().__init__(*args, **kwargs)
+        # If a yjs_doc isn't provided, this is a new model, so initialize the defaults
+        is_new_doc = "yjs_doc" not in kwargs
+
+        if is_new_doc:
+            # Initialize YField defaults, since Django won't do it for us
+            for field in self._meta.fields:
+                if isinstance(field, YField) and field.has_default() and field.name not in kwargs:
+                    kwargs[field.name] = field.get_default()
+
+        super().__init__(**kwargs)
+
         self._state_vector_at_load = self.yjs_doc.get_state()
+
+        if is_new_doc:
+            # Run YFieldOnModelInit
+            for field in self._meta.fields:
+                if isinstance(field, YFieldOnModelInit):
+                    field.initialize_ydoc(self)
 
     def _copy_y_fields(self, is_after_save: bool):
         """
@@ -262,8 +288,21 @@ def _resolve_path(doc: pycrdt.Doc, doc_value_path: str | list[str | int], typ: t
     return value
 
 
+class YFieldOnModelInit:
+    """
+    Interface for fields that should help initialize the ydoc on a new model.
+    """
+
+    def initialize_ydoc(self, model_instance: YDocModel):
+        """
+        Called on each field extending this class after initializing a new instance of a YDocModel.
+        This should fill out default values or do other first-time initialization prepwork.
+        """
+        pass
+
+
 # models.Field[Never, T | None]
-class YField(models.Field, Generic[T]):
+class YField(models.Field, YFieldOnModelInit, Generic[T]):
     """
     Field that is a view into a YDoc value.
 

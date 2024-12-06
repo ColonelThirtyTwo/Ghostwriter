@@ -4,12 +4,14 @@ import os
 
 # 3rd Party Libraries
 import factory
+import pycrdt
 
 # Django Imports
 from django.db import transaction
 from django.test import TestCase
 
 # Ghostwriter Libraries
+from ghostwriter.commandcenter.models import ExtraFieldModel, ExtraFieldSpec
 from ghostwriter.factories import (
     ArchiveFactory,
     ClientFactory,
@@ -27,6 +29,7 @@ from ghostwriter.factories import (
     ReportTemplateFactory,
     SeverityFactory,
 )
+from ghostwriter.reporting.models import Observation
 
 logging.disable(logging.CRITICAL)
 
@@ -650,3 +653,32 @@ class ArchiveModelTests(TestCase):
             archive.filename
         except Exception:
             self.fail("Archive model `filename` property failed unexpectedly!")
+
+
+class ObservationTests(TestCase):
+    fixtures = ["ghostwriter/commandcenter/fixtures/initial.json"]
+
+    @classmethod
+    def setUpTestData(cls) -> None:
+        efm = ExtraFieldModel.objects.get(model_internal_name="reporting.Observation")
+        ExtraFieldSpec(
+            target_model=efm,
+            internal_name="test_int",
+            display_name="Test Int",
+            type="integer",
+            user_default_value="123",
+        ).save()
+
+        observation = Observation()
+        xml = observation.description
+        xml.children.append("Hello ")
+        xml.children.append(pycrdt.XmlElement("strong")).children.append("World!")
+        observation.save()
+        cls.observation_pk = observation.pk
+
+    def test_defaults(self):
+        obs = Observation.objects.get(pk=self.observation_pk)
+        self.assertEqual(obs.title, "Unnamed Observation")
+        self.assertEqual(obs.stored_title, "Unnamed Observation")
+        self.assertEqual(obs.extra_fields["test_int"], 123)
+        self.assertEqual(str(obs.description), "Hello <strong>World!</strong>")

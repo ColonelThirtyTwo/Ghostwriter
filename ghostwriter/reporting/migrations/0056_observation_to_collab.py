@@ -19,7 +19,12 @@ def migrate_into_ydoc(apps, schema_editor):
     TaggedItem = apps.get_model("taggit", "TaggedItem")
     ExtraFieldSpec = apps.get_model("commandcenter", "ExtraFieldSpec")
 
-    obs_content_type_id = ContentType.objects.get(app_label="reporting", model="observation").id
+    try:
+        # ContentType methods aren't available so get it manually.
+        # May not exist for a new database
+        obs_content_type_id = ContentType.objects.get(app_label="reporting", model="observation").id
+    except ContentType.DoesNotExist:
+        obs_content_type_id = None
     extra_field_specs = ExtraFieldSpec.objects.filter(target_model=Observation._meta.label)
 
     for obs in Observation.objects.using(db_alias).all().select_for_update():
@@ -42,11 +47,12 @@ def migrate_into_ydoc(apps, schema_editor):
 
             yjs_extra_fields[spec.internal_name] = value
 
-        for ti in TaggedItem.objects.filter(
-            object_id=obs.id,
-            content_type=obs_content_type_id,
-        ).select_related("tag"):
-            obs.tags_new[ti.tag.name] = True
+        if obs_content_type_id is not None:
+            for ti in TaggedItem.objects.filter(
+                object_id=obs.id,
+                content_type=obs_content_type_id,
+            ).select_related("tag"):
+                obs.tags_new[ti.tag.name] = True
         obs.save()
 
 class Migration(migrations.Migration):
@@ -96,7 +102,7 @@ class Migration(migrations.Migration):
             model_name="observation",
             name="title_new",
             field=ghostwriter.collab_model.models.ydocmodel.YField(
-                ["plain_fields", "title"], str, copy_to_field="stored_title", verbose_name="Title", default=""
+                ["plain_fields", "title"], str, copy_to_field="stored_title", verbose_name="Title", default="Unnamed Observation"
             ),
         ),
         migrations.AddField(

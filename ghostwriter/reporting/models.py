@@ -890,7 +890,7 @@ class Observation(YDocModel):
         str,
         copy_to_field="stored_title",
         verbose_name="Title",
-        default="",
+        default="Unnamed Observation",
     )
 
     description = YField(

@@ -1,25 +1,27 @@
 
 from typing import Any
+import json
 
 import pycrdt
 from django.db import models
 from django.core import checks
 
-from ghostwriter.collab_model.models.ydocmodel import YDocModel
+from ghostwriter.collab_model.models.ydocmodel import YDocModel, YFieldOnModelInit
 from ghostwriter.commandcenter.models import ExtraFieldSpec
 
-class YExtraFields(models.Field):
+class YExtraFields(models.Field, YFieldOnModelInit):
     """
     Django field for a YDocModel that provides more convenient access to user-defined extra fields.
 
     All extra fields are stored on the "extra_fields" map in the doc.
     """
 
-    def __init__(self):
+    def __init__(self, extra_fields_model: type[models.Model] | None = None):
         super().__init__(
             editable=False,
             verbose_name="Extra Fields",
         )
+        self.extra_fields_model = extra_fields_model
 
     def check(self, **kwargs) -> list[checks.CheckMessage]:
         return [
@@ -48,7 +50,37 @@ class YExtraFields(models.Field):
 
     def deconstruct(self) -> Any:
         name, path, _, _ = super().deconstruct()
-        return name, path, tuple(), {}
+        kwargs = {}
+        if self.extra_fields_model is not None:
+            kwargs["extra_fields_model"] = self.extra_fields_model
+        return name, path, tuple(), kwargs
+
+    def _extra_field_specs(self, instance: YDocModel):
+        if self.extra_fields_model is not None:
+            return ExtraFieldSpec.for_model(self.extra_fields_model)
+        else:
+            return ExtraFieldSpec.for_instance(instance)
+
+    def _extra_fields_map(self, instance: YDocModel) -> pycrdt.Map:
+        return instance.yjs_doc.get("extra_fields", type=pycrdt.Map)
+
+    def initialize_ydoc(self, model_instance: YDocModel):
+        """
+        Sets the extra field defaults
+        """
+        yjs_map = self._extra_fields_map(model_instance)
+        for spec in self._extra_field_specs(model_instance):
+            if spec.type == "rich_text":
+                # TODO: this is TinyMCE html, need to either change ExtraFieldSpec or convert the output
+                xml = pycrdt.XmlFragment()
+                yjs_map[spec.internal_name] = xml
+                xml.children.append(spec.initial_value())
+            elif spec.type == "json":
+                encoded = json.dumps(spec.initial_value())
+                yjs_map[spec.internal_name] = encoded
+            else:
+                yjs_map[spec.internal_name] = spec.initial_value()
+
 
 
 class YExtraFieldsDescriptor:
@@ -60,7 +92,7 @@ class YExtraFieldsDescriptor:
         if instance is None:
             return self
         if self.cached_accessor is None:
-            self.cached_accessor = YExtraFieldsAccessor(instance)
+            self.cached_accessor = YExtraFieldsAccessor(self.field, instance)
         return self.cached_accessor
 
     def __set__(self, instance: YDocModel | None, value: Any) -> Any:
@@ -73,9 +105,9 @@ class YExtraFieldsAccessor:
 
     Can be iterated over, which will yield `(ExtraFieldSpec, current_value)` tuples, or indexed by the field's `internal_name`.
     """
-    def __init__(self, instance: YDocModel):
-        self.model_instance = instance
-        self.specs = ExtraFieldSpec.for_instance(instance)
+    def __init__(self, field: YExtraFields, instance: YDocModel):
+        self.yjs_map = field._extra_fields_map(instance)
+        self.specs = field._extra_field_specs(instance)
 
     def spec_for(self, internal_name: str) -> ExtraFieldSpec | None:
         """
@@ -91,13 +123,21 @@ class YExtraFieldsAccessor:
             key = self.spec_for(key)
             if key is None:
                 raise KeyError(key)
-        return self.model_instance.yjs_doc.get("extra_fields", type=pycrdt.Map).get(key.internal_name)
+        return self.yjs_map.get(key.internal_name)
+
+    def __setitem__(self, key: str | ExtraFieldSpec, value: Any):
+        if isinstance(key, str):
+            key = self.spec_for(key)
+            if key is None:
+                raise KeyError(key)
+        self.yjs_map.set(key, value)
 
     def __iter__(self):
         return YExtraFieldsIterator(self)
 
     def __bool__(self):
         return bool(self.specs)
+
 
 class YExtraFieldsIterator:
     """
