@@ -4,12 +4,11 @@ import json
 
 import pycrdt
 from django.db import models
-from django.core import checks
 
-from ghostwriter.collab_model.models.ydocmodel import YDocModel, YFieldOnModelInit
+from ghostwriter.collab_model.models.ydocmodel import YDocModel, YBaseField
 from ghostwriter.commandcenter.models import ExtraFieldSpec
 
-class YExtraFields(models.Field, YFieldOnModelInit):
+class YExtraFields(YBaseField):
     """
     Django field for a YDocModel that provides more convenient access to user-defined extra fields.
 
@@ -17,32 +16,15 @@ class YExtraFields(models.Field, YFieldOnModelInit):
     """
 
     def __init__(self, extra_fields_model: type[models.Model] | None = None):
+        """
+        :param extra_fields_model: If set, use the extra fields for the specified model instead of the
+          model that this field is on.
+        """
         super().__init__(
             editable=False,
             verbose_name="Extra Fields",
         )
         self.extra_fields_model = extra_fields_model
-
-    def check(self, **kwargs) -> list[checks.CheckMessage]:
-        return [
-            *self._check_field_name(),
-            *self._check_is_on_yjs_model(),
-        ]
-
-    def _check_is_on_yjs_model(self) -> list[checks.CheckMessage]:
-        if not issubclass(self.model, YDocModel):
-            return [
-                checks.Error(
-                    "The YField must be on a YDocModel",
-                    obj=self,
-                    id="pycrdt_model.E005"
-                )
-            ]
-        return []
-
-    def get_attname_column(self):
-        attname, _column = super().get_attname_column()
-        return attname, None
 
     def contribute_to_class(self, cls, name, **kwargs) -> None:
         super().contribute_to_class(cls, name, **kwargs)
@@ -64,7 +46,7 @@ class YExtraFields(models.Field, YFieldOnModelInit):
     def _extra_fields_map(self, instance: YDocModel) -> pycrdt.Map:
         return instance.yjs_doc.get("extra_fields", type=pycrdt.Map)
 
-    def initialize_ydoc(self, model_instance: YDocModel):
+    def yjs_initialize_doc(self, model_instance: YDocModel):
         """
         Sets the extra field defaults
         """
@@ -81,19 +63,19 @@ class YExtraFields(models.Field, YFieldOnModelInit):
             else:
                 yjs_map[spec.internal_name] = spec.initial_value()
 
+    def yjs_top_level_entries(self):
+        return (("extra_fields", pycrdt.Map),)
+
 
 
 class YExtraFieldsDescriptor:
     def __init__(self, field: YExtraFields):
         self.field = field
-        self.cached_accessor = None
 
     def __get__(self, instance: YDocModel | None, cls: Any = None) -> "YExtraFieldsAccessor":
         if instance is None:
             return self
-        if self.cached_accessor is None:
-            self.cached_accessor = YExtraFieldsAccessor(self.field, instance)
-        return self.cached_accessor
+        return YExtraFieldsAccessor(self.field, instance)
 
     def __set__(self, instance: YDocModel | None, value: Any) -> Any:
         raise RuntimeError("Cannot set YExtraFields")

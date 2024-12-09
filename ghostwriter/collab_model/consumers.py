@@ -11,7 +11,7 @@ from channels.consumer import AsyncConsumer
 from channels.layers import BaseChannelLayer
 from channels.db import database_sync_to_async
 
-from ghostwriter.collab_model.models.ydocmodel import YDocModel
+from ghostwriter.collab_model.models import YDocModel
 
 logger = logging.getLogger(__name__)
 

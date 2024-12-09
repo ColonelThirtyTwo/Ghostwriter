@@ -71,10 +71,6 @@ class ObservationDetail(RoleBasedAccessControlMixin, DetailView):
         messages.error(self.request, "You do not have the necessary permission to view observations.")
         return redirect("reporting:observations")
 
-    def get_context_data(self, **kwargs):
-        ctx = super().get_context_data(**kwargs)
-        return ctx
-
 
 class ObservationCreate(RoleBasedAccessControlMixin, View):
     def test_func(self):

@@ -14,6 +14,8 @@ def migrate_rich_text(old_src: str, xmlfrag: pycrdt.XmlFragment):
     # TODO: do this for real
     xmlfrag.children.append(old_src)
 
+
+
 def migrate_extra_fields(obj: Any, specs: Iterable[Any]):
     """
     Migrates extra fields from a JSONField named `extra_fields` to the `yjs_doc`'s `extra_fields` map.
@@ -31,6 +33,8 @@ def migrate_extra_fields(obj: Any, specs: Iterable[Any]):
 
         yjs_extra_fields[spec.internal_name] = value
 
+
+
 class TagMigrator:
     """
     Helper to copy tags from a Taggit relationship to the `tags` map of a `yjs_doc`.
@@ -44,7 +48,7 @@ class TagMigrator:
         model = apps.get_model("reporting", "Observation")
         try:
             # ContentType methods aren't available so get it manually.
-            # May not exist for a new database
+            # May not exist for a new database, in which case don't bother because there's nothing to migrate
             self.content_type_id = ContentType.objects.get(app_label=app_label, model=model).id
         except ContentType.DoesNotExist:
             self.content_type_id = None
@@ -56,7 +60,7 @@ class TagMigrator:
         if self.content_type_id is None:
             return
 
-        tags_map = obj.tags
+        tags_map = obj.yjs_doc.get("tags", type=pycrdt.Map)
         for ti in self.TaggedItem.objects.filter(
             object_id=obj.id,
             content_type=self.content_type_id,

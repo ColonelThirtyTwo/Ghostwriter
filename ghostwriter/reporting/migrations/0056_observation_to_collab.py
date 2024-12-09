@@ -3,9 +3,8 @@ from django.db import migrations, models
 import pycrdt._map
 import pycrdt._xml
 
-import ghostwriter.collab_model.models.ydocmodel
-import ghostwriter.collab_model.models.copiers
-import ghostwriter.collab_model.models.extra_fields
+import ghostwriter.collab_model.models
+import ghostwriter.collab_model.models
 from ghostwriter.modules.collab_migration_util import TagMigrator, migrate_extra_fields, migrate_rich_text
 
 
@@ -64,32 +63,28 @@ class Migration(migrations.Migration):
         migrations.AddField(
             model_name="observation",
             name="yjs_doc",
-            field=ghostwriter.collab_model.models.ydocmodel.YDocField(default=pycrdt.Doc(client_id=0)),
+            field=ghostwriter.collab_model.models.YDocField(),
             preserve_default=False,
         ),
         migrations.AddField(
             model_name="observation",
             name="title_new",
-            field=ghostwriter.collab_model.models.ydocmodel.YField(
+            field=ghostwriter.collab_model.models.YField(
                 ["plain_fields", "title"], str, copy_to_field="stored_title", verbose_name="Title", default="Unnamed Observation"
             ),
         ),
         migrations.AddField(
             model_name="observation",
             name="description_new",
-            field=ghostwriter.collab_model.models.ydocmodel.YField(
+            field=ghostwriter.collab_model.models.YField(
                 "description", pycrdt._xml.XmlFragment, verbose_name="Description"
             ),
         ),
         migrations.AddField(
             model_name="observation",
             name="tags_new",
-            field=ghostwriter.collab_model.models.ydocmodel.YField(
-                "tags",
-                pycrdt._map.Map,
-                copy_to_field=ghostwriter.collab_model.models.copiers.copy_tags,
-                copy_to_field_after_save=True,
-                verbose_name="Tags",
+            field=ghostwriter.collab_model.models.YTagsField(
+                "stored_tags",
             ),
         ),
 
@@ -110,7 +105,7 @@ class Migration(migrations.Migration):
         migrations.AddField(
             model_name="observation",
             name="extra_fields",
-            field=ghostwriter.collab_model.models.extra_fields.YExtraFields(),
+            field=ghostwriter.collab_model.models.YExtraFields(),
         ),
 
         # Rename new fields to correct name.

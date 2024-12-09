@@ -15,9 +15,7 @@ from django.urls import reverse
 
 # 3rd Party Libraries
 from cvss import CVSS3, CVSS4
-from ghostwriter.collab_model.models.ydocmodel import YDocModel, YField
-from ghostwriter.collab_model.models.copiers import copy_tags
-from ghostwriter.collab_model.models.extra_fields import YExtraFields
+from ghostwriter.collab_model.models import YDocModel, YField, YExtraFields, YTagsField
 from taggit.managers import TaggableManager
 import pycrdt
 
@@ -900,13 +898,7 @@ class Observation(YDocModel):
     )
 
     stored_tags = TaggableManager(blank=True)
-    tags = YField(
-        "tags",
-        pycrdt.Map,
-        verbose_name="Tags",
-        copy_to_field=copy_tags,
-        copy_to_field_after_save=True,
-    )
+    tags = YTagsField("stored_tags")
 
     extra_fields = YExtraFields()
 
