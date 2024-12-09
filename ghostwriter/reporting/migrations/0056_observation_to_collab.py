@@ -1,58 +1,27 @@
 
-import json
-
 from django.db import migrations, models
-import ghostwriter.collab_model.models.ydocmodel
-import ghostwriter.collab_model.models.copiers
-import ghostwriter.collab_model.models.extra_fields
 import pycrdt._map
 import pycrdt._xml
 
-def migrate_rich_text(old_src: str, xmlfrag: pycrdt.XmlFragment):
-    # TODO: do this for real
-    xmlfrag.children.append(pycrdt.XmlElement("p"))
+import ghostwriter.collab_model.models.ydocmodel
+import ghostwriter.collab_model.models.copiers
+import ghostwriter.collab_model.models.extra_fields
+from ghostwriter.modules.collab_migration_util import TagMigrator, migrate_extra_fields, migrate_rich_text
+
 
 def migrate_into_ydoc(apps, schema_editor):
     db_alias = schema_editor.connection.alias
-    ContentType = apps.get_model("contenttypes", "ContentType")
     Observation = apps.get_model("reporting", "Observation")
-    TaggedItem = apps.get_model("taggit", "TaggedItem")
     ExtraFieldSpec = apps.get_model("commandcenter", "ExtraFieldSpec")
-
-    try:
-        # ContentType methods aren't available so get it manually.
-        # May not exist for a new database
-        obs_content_type_id = ContentType.objects.get(app_label="reporting", model="observation").id
-    except ContentType.DoesNotExist:
-        obs_content_type_id = None
     extra_field_specs = ExtraFieldSpec.objects.filter(target_model=Observation._meta.label)
+    tag_migrator = TagMigrator(apps, "reporting", "Observation")
 
     for obs in Observation.objects.using(db_alias).all().select_for_update():
         obs.title_new = obs.stored_title
 
-        # TODO: migrate rich text properly
-        obs.description_new.children.append(obs.description)
-
-        yjs_extra_fields = obs.yjs_doc.get("extra_fields", type=pycrdt.Map)
-        for spec in extra_field_specs:
-            value = obs.extra_fields.get(spec.internal_name, None)
-            if spec.type == "rich_text":
-                # TODO: migrate rich text properly
-                frag = pycrdt.XmlFragment()
-                yjs_extra_fields[spec.internal_name] = frag
-                frag.children.append(str(value))
-                continue
-            elif spec.type == "json":
-                value = json.dumps(value)
-
-            yjs_extra_fields[spec.internal_name] = value
-
-        if obs_content_type_id is not None:
-            for ti in TaggedItem.objects.filter(
-                object_id=obs.id,
-                content_type=obs_content_type_id,
-            ).select_related("tag"):
-                obs.tags_new[ti.tag.name] = True
+        migrate_rich_text(obs.description, obs.description_new)
+        migrate_extra_fields(obs, extra_field_specs)
+        tag_migrator.migrate(obs)
         obs.save()
 
 class Migration(migrations.Migration):

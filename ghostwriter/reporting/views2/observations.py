@@ -9,9 +9,8 @@ from django.http import HttpRequest, HttpResponse
 from django.urls import reverse, reverse_lazy
 from django.db.models import Q
 
-from ghostwriter.api.utils import RoleBasedAccessControlMixin, verify_observation_access
+from ghostwriter.api.utils import RoleBasedAccessControlMixin
 from ghostwriter.collab_model.views import CollabModelUpdate
-from ghostwriter.commandcenter.models import ExtraFieldSpec
 from ghostwriter.reporting.filters import ObservationFilter
 from ghostwriter.reporting.models import Observation
 
@@ -98,6 +97,7 @@ class ObservationUpdate(CollabModelUpdate):
     model = Observation
     template_name = "reporting/observation_update.html"
     unauthorized_redirect = "reporting:observations"
+
 
 class ObservationDelete(RoleBasedAccessControlMixin, DeleteView):
     """
