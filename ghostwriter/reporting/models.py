@@ -884,7 +884,7 @@ class Observation(YDocModel):
 
     stored_title = models.TextField("Title", editable=False, blank=True)
     title = YField(
-        ["plain_fields", "title"],
+        "title",
         str,
         copy_to_field="stored_title",
         verbose_name="Title",
@@ -908,7 +908,9 @@ class Observation(YDocModel):
         verbose_name_plural = "Observations"
 
     def __str__(self):
-        return str(self.stored_title)
+        if self.stored_title:
+            return str(self.stored_title)
+        return "(Unnamed Observation)"
 
     def get_absolute_url(self):
         return reverse("reporting:observation_detail", args=[str(self.id)])

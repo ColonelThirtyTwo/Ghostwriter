@@ -103,3 +103,6 @@ class YTagsAccessor:
 
     def __iter__(self):
         return self.yjs_map.keys()
+
+    def __contains__(self, tag: str) -> bool:
+        return tag in self.yjs_map

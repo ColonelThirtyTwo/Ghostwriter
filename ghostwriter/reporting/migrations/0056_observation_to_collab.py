@@ -70,7 +70,7 @@ class Migration(migrations.Migration):
             model_name="observation",
             name="title_new",
             field=ghostwriter.collab_model.models.YField(
-                ["plain_fields", "title"], str, copy_to_field="stored_title", verbose_name="Title", default="Unnamed Observation"
+                "title", str, copy_to_field="stored_title", verbose_name="Title", default="Unnamed Observation"
             ),
         ),
         migrations.AddField(

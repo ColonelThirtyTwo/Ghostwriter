@@ -201,9 +201,15 @@ class YDocModel(models.Model):
 
         if is_new_doc:
             # Run YFieldOnModelInit
-            for field in self._meta.fields:
-                if isinstance(field, YBaseField):
-                    field.yjs_initialize_ydoc(self)
+            for field in self.yfields():
+                field.yjs_initialize_ydoc(self)
+
+    @classmethod
+    def yfields(cls) -> Iterable["YBaseField"]:
+        """
+        Gets an iterable over all YBaseFields this model contains
+        """
+        return (field for field in cls._meta.fields if isinstance(field, YBaseField))
 
     def save(self, *args, author: models.Model | int | None = None, **kwargs):
         """
