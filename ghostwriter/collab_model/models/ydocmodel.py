@@ -1,11 +1,12 @@
-from typing import Any, Iterable
-from abc import ABC
+from typing import Any, Iterable, Union
+from abc import ABC, abstractmethod
 
 from django.db import models, transaction
 from django.core import checks
 from django.contrib.contenttypes.fields import GenericForeignKey
 from django.contrib.contenttypes.models import ContentType
 from django.conf import settings
+from django.utils.safestring import SafeString
 import pycrdt._base
 
 from ghostwriter.collab_model.yjs_dump import dump_yjs_doc
@@ -52,14 +53,18 @@ class History(models.Model):
 
     @classmethod
     def replay(
-        cls, obj: "YDocModel", until_id: int, until_id_inclusive: bool = True
+        cls,
+        obj: "YDocModel",
+        until_id: int,
+        until_id_inclusive: bool = True,
+        client_id: int = 0
     ) -> pycrdt.Doc:
         """
         Gets a `pycrdt.Doc` with the state at the time of the last update at or until `until_id`.
 
         If `until_id_inclusive` is True, the update at `until_id` is included, otherwise it is excluded.
         """
-        doc = pycrdt.Doc()
+        doc = pycrdt.Doc(client_id=client_id)
         with doc.transaction():
             qs = cls.for_object(obj)
             if until_id_inclusive:
@@ -67,7 +72,7 @@ class History(models.Model):
             else:
                 qs = qs.filter(id__lt=until_id)
             for history_entry in qs:
-                doc.apply_update(history_entry.update)
+                doc.apply_update(bytes(history_entry.update))
         return doc
 
     @classmethod
@@ -94,6 +99,12 @@ class History(models.Model):
         if last_entry is None or last_entry.id != history_id:
             return None
         return (doc, last_entry)
+
+    def __str__(self):
+        return "Edit by {} at {}".format(
+            self.author or "System",
+            self.time.strftime("%Y-%m-%d %H:%M:%S"),
+        )
 
 
 
@@ -190,19 +201,23 @@ class YDocModel(models.Model):
         is_new_doc = "yjs_doc" not in kwargs
 
         if is_new_doc:
+            # New doc, use empty state vector
+            self._state_vector_at_load = None
+
             # Initialize YField defaults, since Django won't do it for us
             for field in self._meta.fields:
                 if isinstance(field, YBaseField) and field.has_default() and field.name not in kwargs:
                     kwargs[field.name] = field.get_default()
+        else:
+            # Need to get the state vector before any of the field initializers modify the doc
+            self._state_vector_at_load = kwargs["yjs_doc"].get_state()
 
         super().__init__(**kwargs)
-
-        self._state_vector_at_load = self.yjs_doc.get_state()
 
         if is_new_doc:
             # Run YFieldOnModelInit
             for field in self.yfields():
-                field.yjs_initialize_ydoc(self)
+                field.yjs_initialize_doc(self)
 
     @classmethod
     def yfields(cls) -> Iterable["YBaseField"]:
@@ -218,9 +233,8 @@ class YDocModel(models.Model):
         :param author: Either a user model instance or an ID for one. Will be saved as the
           `History`'s `author`. Must be passed as a keyword argument.
         """
-        for field in self._meta.fields:
-            if isinstance(field, YBaseField):
-                field.yjs_pre_save(self)
+        for field in self.yfields():
+            field.yjs_pre_save(self)
 
         if self._state_vector_at_load == self.yjs_doc.get_state():
             # No actual changes with the doc, don't save a new history entry
@@ -230,9 +244,8 @@ class YDocModel(models.Model):
         with transaction.atomic():
             super().save(*args, **kwargs)
 
-            for field in self._meta.fields:
-                if isinstance(field, YBaseField):
-                    field.yjs_post_save(self)
+            for field in self.yfields():
+                field.yjs_post_save(self)
 
             history = History(target=self, update=update)
             if isinstance(author, int):
@@ -246,19 +259,27 @@ class YDocModel(models.Model):
         """
         Returns a human-readable representation of the ydoc, for debugging
         """
+        return self.dump_doc(self.yjs_doc)
+
+    @classmethod
+    def dump_doc(cls, doc: pycrdt.Doc) -> str:
+        """
+        Returns a human-readable representation of the passed in ydoc, for debugging.
+
+        Uses this model's fields.
+        """
         top_level = dict()
-        for field in self._meta.fields:
+        for field in cls._meta.fields:
             if isinstance(field, YBaseField):
                 for name, typ in field.yjs_top_level_entries():
                     top_level[name] = typ
-        return dump_yjs_doc(self.yjs_doc, top_level.items())
+        return dump_yjs_doc(doc, top_level.items())
 
     def user_can_edit(self, user: models.Model) -> bool:
         """
         Checks if a user has edit permission for a model.
         """
         raise NotImplementedError("YDocModel subclass must implement user_can_edit!")
-
 
 
 
@@ -303,6 +324,15 @@ class YBaseField(models.Field, ABC):
         """
         return tuple()
 
+    def yjs_observe_for_history(self, document: pycrdt.Doc) -> Union["BaseHistoryObserver", None]:
+        """
+        Begin observing the YDoc for rendering history deltas.
+
+        Should return a BaseHistoryObserver subclass that will capture observation events and render a diff view of the field,
+        or None if no diff view for this field should be rendered.
+        """
+        return None
+
     def get_attname_column(self):
         # These fields forward to the yjs doc, so they don't need a real DB field.
         # This does come with some consequences though - Django will not pass the field's
@@ -326,3 +356,23 @@ class YBaseField(models.Field, ABC):
                 )
             ]
         return []
+
+
+
+class BaseHistoryObserver(ABC):
+    @abstractmethod
+    def render_and_reset(self) -> SafeString | None:
+        """
+        Called in between applying history updates to render the diff and clear the stored events
+        in preparation for rendering the diff for the next history update.
+
+        Should return rendered HTML for the diff, or `None` if the field was unchanged.
+        """
+        pass
+
+    @abstractmethod
+    def unobserve(self):
+        """
+        Called when finished rendering so that the observer may unregister itself from the ydoc
+        """
+        pass

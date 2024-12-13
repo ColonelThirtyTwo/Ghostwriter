@@ -1,0 +1,9 @@
+
+<h4>{{verbose_name}}</h4>
+
+{% if old_value %}
+    <span class="changeset-deleted">{{ old_value }}</span><br />
+{% endif %}
+{% if new_value %}
+    <span class="changeset-added">{{ new_value }}</span><br />
+{% endif %}

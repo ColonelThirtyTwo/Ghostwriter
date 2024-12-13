@@ -2,14 +2,13 @@
 from typing import Any
 
 import pycrdt
-from django.db import models
 from django.core import checks
 from django.core.exceptions import FieldDoesNotExist
-
+from django.template.loader import render_to_string
+from django.utils.safestring import SafeString
 from taggit.managers import TaggableManager
 
-from ghostwriter.collab_model.models.ydocmodel import YDocModel, YBaseField
-from ghostwriter.commandcenter.models import ExtraFieldSpec
+from ghostwriter.collab_model.models.ydocmodel import BaseHistoryObserver, YDocModel, YBaseField
 
 
 class YTagsField(YBaseField):
@@ -75,6 +74,9 @@ class YTagsField(YBaseField):
     def yjs_top_level_entries(self):
         return (("tags", pycrdt.Map),)
 
+    def yjs_observe_for_history(self, doc):
+        return YTagsHistoryObserver(self.verbose_name, doc.get("tags", type=pycrdt.Map))
+
 
 
 class YTagsDescriptor:
@@ -106,3 +108,36 @@ class YTagsAccessor:
 
     def __contains__(self, tag: str) -> bool:
         return tag in self.yjs_map
+
+
+
+class YTagsHistoryObserver(BaseHistoryObserver):
+    def __init__(self, verbose_name: str, map: pycrdt.Map):
+        self.verbose_name = verbose_name
+        self.map = map
+        self.tag_changes = {tag: None for tag in self.map.keys()}
+
+        def callback(ev: pycrdt.MapEvent):
+            nonlocal self
+            for name, delta in ev.keys.items():
+                if delta["action"] == "update" and delta["oldValue"] == delta["newValue"]:
+                    continue
+                self.tag_changes[name] = delta.get("newValue") is not None
+
+        self.subscription = self.map.observe(callback)
+
+    def render_and_reset(self) -> SafeString | None:
+        if all(v is None for v in self.tag_changes.values()):
+            return None
+
+        rendered = render_to_string("collab_model/history_delta/tags.html", {
+            "verbose_name": self.verbose_name,
+            "tags": sorted(self.tag_changes.items(), key=lambda tup: tup[0]),
+        })
+
+        self.tag_changes = {tag: None for tag in self.map.keys()}
+
+        return rendered
+
+    def unobserve(self):
+        self.map.unobserve(self.subscription)

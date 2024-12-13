@@ -36,17 +36,25 @@ export function TagEditor(props: {
             }
         });
 
-        // TODO: implement. no docs on these...
         taggify.current.on("add", (ev) => {
-            console.log("add", ev.detail);
-            map.set(ev.detail.data!.value, true);
+            //console.log("add", ev.detail);
+            const tag = ev.detail.data!.value;
+            if (!map.get(tag)) {
+                // Don't re-add tags - doing so causes redundant updates and history entries.
+                map.set(tag, true);
+            }
         });
         taggify.current.on("remove", (ev) => {
-            console.log("remove", ev.detail);
+            //console.log("remove", ev.detail);
             map.delete(ev.detail.data!.value);
         });
         taggify.current.on("edit:updated", (ev) => {
-            console.log("edit:updated", ev.detail);
+            //console.log("edit:updated", ev.detail);
+            const oldTag = (ev.detail as any).previousData.value as string; // types broken
+            const newTag = ev.detail.data!.tag.value;
+            if (oldTag === newTag) return;
+            map.delete(oldTag);
+            map.set(newTag, true);
         });
 
         return () => {

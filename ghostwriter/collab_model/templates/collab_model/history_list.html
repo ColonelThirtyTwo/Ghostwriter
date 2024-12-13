@@ -1,0 +1,60 @@
+{% extends "base_generic.html" %}
+
+{% load static %}
+
+{% block content %}
+    <div class="container">
+        <h2>Edit History for {{object}}</h2>
+        <a href="{{object.get_absolute_url}}">Back to {{object}}</a>
+    </div>
+
+    {% for history_instance, changes in history_deltas %}
+        <div class="card mb-3">
+            <div class="card-header">
+                {{history_instance}}
+            </div>
+            <div class="card-body" style="text-align: left">
+                {% for change in changes %}
+                    {{change}}
+                {% endfor %}
+                {% if not changes %}
+                    <p>No Visible Changes</p>
+                {% endif %}
+            </div>
+        </div>
+    {% endfor %}
+
+    <nav>
+        <ul class="pagination justify-content-center">
+            <li class="page-item {{page.has_previous|yesno:",disabled"}}">
+                <a
+                    class="page-link"
+                    {% if page.has_previous %}href="?page={{page.previous_page_number}}"{% endif %}
+                >Previous</a>
+            </li>
+
+            {% for item in pagination_range %}
+                {% if item == "…" %}
+                    <li class="page-item disabled">
+                        <a class="page-link">…</a>
+                    </li>
+                {% elif item == page.number %}
+                    <li class="page-item active" aria-current="page">
+                        <a class="page-link" href="?page={{item}}">{{item}}</a>
+                    </li>
+                {% else %}
+                    <li class="page-item">
+                        <a class="page-link" href="?page={{item}}">{{item}}</a>
+                    </li>
+                {% endif %}
+            {% endfor %}
+
+            <li class="page-item {{page.has_next|yesno:",disabled"}}">
+                <a
+                    class="page-link"
+                    {% if page.has_next %}href="?page={{page.previous_page_number}}"{% endif %}
+                >Next</a>
+            </li>
+        </ul>
+    </nav>
+{% endblock %}

@@ -4,8 +4,10 @@
 from django.urls import path
 
 # Ghostwriter Libraries
+from ghostwriter.reporting.models import Observation
 import ghostwriter.reporting.views2.observations
 from ghostwriter.reporting import views
+from ghostwriter.collab_model.views import HistoryListView
 
 app_name = "reporting"
 
@@ -127,6 +129,7 @@ urlpatterns += [
     path("observations/create/", ghostwriter.reporting.views2.observations.ObservationCreate.as_view(), name="observation_create"),
     path("observations/update/<int:pk>", ghostwriter.reporting.views2.observations.ObservationUpdate.as_view(), name="observation_update"),
     path("observations/delete/<int:pk>", ghostwriter.reporting.views2.observations.ObservationDelete.as_view(), name="observation_delete"),
+    path("observations/<int:pk>/history", HistoryListView.as_view(model=Observation), name="observation_history"),
 ]
 
 # URLs for creating, updating, and deleting reports

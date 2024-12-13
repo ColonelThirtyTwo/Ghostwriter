@@ -18,6 +18,10 @@ export default defineConfig(({ mode }) => {
                         __dirname,
                         "./src/collab_forms/forms/observation.tsx"
                     ),
+                    common_styles: resolve(
+                        __dirname,
+                        "./src/common_styles.scss"
+                    ),
                 },
                 output: {
                     entryFileNames: "assets/[name].js",

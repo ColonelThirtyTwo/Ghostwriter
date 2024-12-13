@@ -1,5 +1,5 @@
 
-from typing import Iterable
+from typing import Any, Iterable
 from io import StringIO
 
 import pycrdt
@@ -10,7 +10,7 @@ def dump_yjs_doc(doc: pycrdt.Doc, top_level_elements: Iterable[tuple[str, pycrdt
     Dumps the contents of a yjs doc to a human-readable string, for debugging.
     """
     out = StringIO()
-    out.write("ydoc{")
+    out.write("ydoc{\n")
 
     sorted_items = sorted(top_level_elements, key=lambda t: t[0])
     for k, typ in sorted_items:
@@ -21,7 +21,12 @@ def dump_yjs_doc(doc: pycrdt.Doc, top_level_elements: Iterable[tuple[str, pycrdt
     out.write("}")
     return out.getvalue()
 
-def _dump_one(out: StringIO, indent: int, value: pycrdt._base.BaseType):
+def dump_yjs_value(value: Any):
+    out = StringIO()
+    _dump_one(out, 0, value)
+    return out.getvalue()
+
+def _dump_one(out: StringIO, indent: int, value: Any):
     if not isinstance(value, pycrdt._base.BaseType):
         out.write(repr(value))
     elif isinstance(value, pycrdt.Text):

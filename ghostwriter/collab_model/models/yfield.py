@@ -3,9 +3,12 @@ from typing import Any, Generic, TypeVar
 from django.db.models.fields import NOT_PROVIDED
 from django.core.exceptions import FieldDoesNotExist
 from django.core import checks
+from django.template.loader import render_to_string
+from django.utils.safestring import SafeString
 import pycrdt._base
 
-from ghostwriter.collab_model.models.ydocmodel import YBaseField, YDocModel
+from ghostwriter.collab_model.tiptap_converters.html import TiptapToHtml
+from ghostwriter.collab_model.models.ydocmodel import BaseHistoryObserver, YBaseField, YDocModel
 
 T = TypeVar("T")
 V = TypeVar("V", bound=T)
@@ -79,7 +82,7 @@ class YField(YBaseField, Generic[T]):
     def _set_on_model(self, instance: YDocModel, value: T):
         if issubclass(self.yjs_type, pycrdt._base.BaseType):
             raise RuntimeError("Cannot set {} directly".format(self.yjs_type))
-        instance.yjs_doc.get("plain_fields", type=pycrdt.Map).set(self.yjs_name, value)
+        instance.yjs_doc.get("plain_fields", type=pycrdt.Map)[self.yjs_name] = value
 
     def yjs_pre_save(self, model_instance: YDocModel):
         if self.copy_to_field is None:
@@ -106,6 +109,21 @@ class YField(YBaseField, Generic[T]):
             return ((self.yjs_name, self.yjs_type),)
         return (("plain_fields", pycrdt.Map),)
 
+    def yjs_observe_for_history(self, document: pycrdt.Doc) -> BaseHistoryObserver | None:
+        if issubclass(self.yjs_type, pycrdt.XmlFragment):
+            return XmlFragmentHistoryObserver(
+                self.verbose_name,
+                document.get(self.yjs_name, type=pycrdt.XmlFragment),
+            )
+        elif issubclass(self.yjs_type, pycrdt._base.BaseType):
+            return None
+        else:
+            return SimpleHistoryObserver(
+                self.verbose_name,
+                document.get("plain_fields", type=pycrdt.Map),
+                self.yjs_name,
+            )
+
 
 class YFieldDescriptor(Generic[T]):
     """
@@ -122,3 +140,80 @@ class YFieldDescriptor(Generic[T]):
     def __set__(self, instance: YDocModel | None, value: V) -> V:
         self.field._set_on_model(instance, value)
         return value
+
+
+class SimpleHistoryObserver(BaseHistoryObserver):
+    def __init__(self, verbose_name: str, map: pycrdt.Map, field: str):
+        self.verbose_name = verbose_name
+        self.field = field
+        self.map = map
+        self.changed = False
+        self.old_value = self.map.get(field)
+        self.new_value = None
+
+        def callback(ev: pycrdt.MapEvent):
+            nonlocal self
+            if self.field in ev.keys:
+                delta = ev.keys[self.field]
+                self.changed = True
+                self.new_value = delta.get("newValue")
+
+        self.subscription = self.map.observe(callback)
+
+    def render_and_reset(self) -> str | None:
+        if not self.changed:
+            return None
+        if not self.old_value and not self.new_value:
+            # Change won't be visible so don't bother.
+            # For example, changing from None to the empty string in defaults.
+            return None
+
+        rendered = render_to_string("collab_model/history_delta/simple.html", {
+            "verbose_name": self.verbose_name,
+            "old_value": self.old_value,
+            "new_value": self.new_value,
+        })
+
+        self.changed = False
+        self.old_value = self.new_value
+        self.new_value = None
+
+        return rendered
+
+    def unobserve(self):
+        self.map.unobserve(self.subscription)
+
+class XmlFragmentHistoryObserver(BaseHistoryObserver):
+    def __init__(self, verbose_name: str, fragment: pycrdt.XmlFragment):
+        self.verbose_name = verbose_name
+        self.fragment = fragment
+        self.converter = TiptapToHtml(self.fragment)
+        self.changed = False
+
+        def callback(evs: list[pycrdt.XmlEvent]):
+            nonlocal self
+            for ev in evs:
+                self.changed = True
+                if isinstance(ev.target, pycrdt.XmlText):
+                    self.converter.apply_text_event(ev.path, ev.delta)
+                else:
+                    self.converter.apply_element_event(ev.path, ev.delta, ev.keys)
+
+        self.subscription = self.fragment.observe_deep(callback)
+
+    def render_and_reset(self) -> SafeString | None:
+        if not self.changed:
+            return None
+
+        rendered = render_to_string("collab_model/history_delta/rich_text.html", {
+            "verbose_name": self.verbose_name,
+            "converter": self.converter,
+        })
+
+        self.converter = TiptapToHtml(self.fragment)
+        self.changed = False
+
+        return rendered
+
+    def unobserve(self):
+        self.fragment.unobserve(self.subscription)

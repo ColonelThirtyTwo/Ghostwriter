@@ -1,0 +1,5 @@
+<h4>{{verbose_name}}</h4>
+
+{% for tag, change in tags %}
+    <span class="badge {{change|yesno:"badge-success,badge-danger,badge-secondary"}}">{{tag}}</span>
+{% endfor %}
