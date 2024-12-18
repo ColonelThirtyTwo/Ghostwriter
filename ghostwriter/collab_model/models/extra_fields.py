@@ -103,6 +103,12 @@ class YExtraFieldsAccessor:
         """
         return next((spec for spec in self.specs if spec.internal_name == internal_name), None)
 
+    def raw_map(self) -> pycrdt.Map:
+        """
+        Gets the underlying YJS map that the extra fields are stored in
+        """
+        return self.yjs_map
+
     def __getitem__(self, key: str | ExtraFieldSpec) -> Any:
         """
         Gets the extra field value. Can be indexed by the field's internal_name or the spec itself.

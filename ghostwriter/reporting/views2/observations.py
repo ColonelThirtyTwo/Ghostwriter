@@ -1,18 +1,23 @@
 
+import logging
+
+from django.contrib import messages
+from django.db.models import Q
+from django.http import HttpRequest, HttpResponse, JsonResponse
+from django.shortcuts import redirect, render, get_object_or_404
+from django.template.loader import render_to_string
+from django.urls import reverse, reverse_lazy
 from django.views import View
 from django.views.generic.detail import DetailView
-from django.views.generic.list import ListView
 from django.views.generic.edit import DeleteView
-from django.contrib import messages
-from django.shortcuts import redirect, render
-from django.http import HttpRequest, HttpResponse
-from django.urls import reverse, reverse_lazy
-from django.db.models import Q
+from django.views.generic.list import ListView
 
-from ghostwriter.api.utils import RoleBasedAccessControlMixin
+from ghostwriter.api.utils import ForbiddenJsonResponse, RoleBasedAccessControlMixin, verify_access
 from ghostwriter.collab_model.views import CollabModelUpdate
 from ghostwriter.reporting.filters import ObservationFilter
-from ghostwriter.reporting.models import Observation
+from ghostwriter.reporting.models import Observation, Report
+
+logger = logging.getLogger(__name__)
 
 
 class ObservationList(RoleBasedAccessControlMixin, ListView):
@@ -120,7 +125,7 @@ class ObservationDelete(RoleBasedAccessControlMixin, DeleteView):
 
     def handle_no_permission(self):
         messages.error(self.request, "You do not have the necessary permission to delete observations.")
-        return self.get_object().get_absolute_url()
+        return redirect(self.get_object().get_absolute_url())
 
     def get_success_url(self):
         messages.warning(
@@ -137,3 +142,57 @@ class ObservationDelete(RoleBasedAccessControlMixin, DeleteView):
         ctx["object_to_be_deleted"] = queryset.title
         ctx["cancel_link"] = reverse("reporting:observations")
         return ctx
+
+
+
+class ObservationToReportObservationLink(View):
+    """
+    JSON endpoint that creates a `ReportObservationLink` from an `Observation` and binds it to a `Report`.
+    """
+
+    def post(self, *args, **kwargs):
+        if not self.request.user.is_active:
+            return ForbiddenJsonResponse()
+        observation = get_object_or_404(Observation, id=self.kwargs["observation_pk"])
+
+        if "report" in self.request.POST:
+            try:
+                report_id = int(self.request.POST["report"])
+            except ValueError:
+                report_id = None
+        else:
+            report_id = self.request.session.get("active_report", None)
+        if report_id is None:
+            return JsonResponse({
+                "result": "error",
+                "message": "Please select a report to edit in the sidebar or go to a report's dashboard to assign an observation."
+            })
+
+        report = get_object_or_404(Report, id=report_id)
+        if not verify_access(self.request.user, report.project):
+            return ForbiddenJsonResponse()
+
+        report_link = observation.create_link(report)
+        report_link.assigned_to = self.request.user
+        report_link.save()
+
+        logger.info(
+            "Copied %s %s to %s %s (%s %s) by request of %s",
+            observation.__class__.__name__,
+            observation.id,
+            report.__class__.__name__,
+            report.id,
+            report_link.__class__.__name__,
+            report_link.id,
+            self.request.user,
+        )
+
+        return JsonResponse({
+            "result": "success",
+            "message": "{} successfully added to your active report.".format(observation),
+            "table_html": render_to_string(
+                "snippets/report_observations_table.html",
+                {"report": report},
+                request=self.request
+            )
+        })

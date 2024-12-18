@@ -189,32 +189,35 @@ class YDocModel(models.Model):
         # Django does not pass defaults for YFields, as they don't have a backing column, and defaults for things
         # like extra fields are a bit more complicated since they involve nested values.
 
-        # Convert args tuple into kwargs slots since it's much easier to keep track of
+        provided_fields = set(kwargs.keys())
+        loading_yjs_doc = None
         for i, val in enumerate(args):
             try:
                 field = self._meta.concrete_fields[i]
             except IndexError as e:
                 raise ValueError("Too many arguments to YDocModel init") from e
-            kwargs[field.name] = val
+            provided_fields.add(field.name)
+            if field.name == "yjs_doc":
+                loading_yjs_doc = val
 
-        # If a yjs_doc isn't provided, this is a new model, so initialize the defaults
-        is_new_doc = "yjs_doc" not in kwargs
+        if loading_yjs_doc is None and "yjs_doc" in kwargs:
+            loading_yjs_doc = kwargs["yjs_doc"]
 
-        if is_new_doc:
+        if loading_yjs_doc is None:
             # New doc, use empty state vector
             self._state_vector_at_load = None
 
             # Initialize YField defaults, since Django won't do it for us
-            for field in self._meta.fields:
-                if isinstance(field, YBaseField) and field.has_default() and field.name not in kwargs:
+            for field in self.yfields():
+                if field.has_default() and field.name not in provided_fields:
                     kwargs[field.name] = field.get_default()
         else:
             # Need to get the state vector before any of the field initializers modify the doc
-            self._state_vector_at_load = kwargs["yjs_doc"].get_state()
+            self._state_vector_at_load = loading_yjs_doc.get_state()
 
-        super().__init__(**kwargs)
+        super().__init__(*args, **kwargs)
 
-        if is_new_doc:
+        if loading_yjs_doc is not None:
             # Run YFieldOnModelInit
             for field in self.yfields():
                 field.yjs_initialize_doc(self)

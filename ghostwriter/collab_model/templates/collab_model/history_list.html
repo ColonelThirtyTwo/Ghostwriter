@@ -5,7 +5,9 @@
 {% block content %}
     <div class="container">
         <h2>Edit History for {{object}}</h2>
+        {% if object.get_absolute_url %}
         <a href="{{object.get_absolute_url}}">Back to {{object}}</a>
+        {% endif %}
     </div>
 
     {% for history_instance, changes in history_deltas %}

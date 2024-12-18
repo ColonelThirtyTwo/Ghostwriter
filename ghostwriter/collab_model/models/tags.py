@@ -98,10 +98,24 @@ class YTagsAccessor:
         self.yjs_map = field._get_map(instance)
 
     def insert(self, tag: str):
+        """
+        Inserts a tag
+        """
         self.yjs_map[tag] = True
 
     def remove(self, tag: str):
+        """
+        Removes a tag
+        """
         del self.yjs_map[tag]
+
+    def raw_map(self) -> pycrdt.Map:
+        """
+        Gets the underlying YJS map that the tags are stored in.
+
+        Tag names are keys and the only value is `True`.
+        """
+        return self.yjs_map
 
     def __iter__(self):
         return self.yjs_map.keys()

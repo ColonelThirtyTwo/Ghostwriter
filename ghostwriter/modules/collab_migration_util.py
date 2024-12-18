@@ -39,17 +39,19 @@ class TagMigrator:
     """
     Helper to copy tags from a Taggit relationship to the `tags` map of a `yjs_doc`.
     """
-    def __init__(self, apps, app_label: str, model: str):
+    def __init__(self, apps, db_alias: str, app_label: str, model: str):
         """
         Loads data needed to perform the migration. Should be done outside of the update loop.
         """
+        self.db_alias = db_alias
+
         ContentType = apps.get_model("contenttypes", "ContentType")
         self.TaggedItem = apps.get_model("taggit", "TaggedItem")
         model = apps.get_model("reporting", "Observation")
         try:
             # ContentType methods aren't available so get it manually.
             # May not exist for a new database, in which case don't bother because there's nothing to migrate
-            self.content_type_id = ContentType.objects.get(app_label=app_label, model=model).id
+            self.content_type_id = ContentType.objects.using(self.db_alias).get(app_label=app_label, model=model).id
         except ContentType.DoesNotExist:
             self.content_type_id = None
 
@@ -61,7 +63,7 @@ class TagMigrator:
             return
 
         tags_map = obj.yjs_doc.get("tags", type=pycrdt.Map)
-        for ti in self.TaggedItem.objects.filter(
+        for ti in self.TaggedItem.objects.using(self.db_alias).filter(
             object_id=obj.id,
             content_type=self.content_type_id,
         ).select_related("tag"):

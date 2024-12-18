@@ -14,4 +14,8 @@ websocket_urlpatterns = [
         model=models.Observation,
         getter=lambda url_route: models.Observation.objects.get(id=url_route["kwargs"]["id"]),
     )),
+    re_path(r"ws/collab/reportobservationlink/(?P<id>[0-9]+)/$", YjsUpdateConsumer.as_asgi(
+        model=models.ReportObservationLink,
+        getter=lambda url_route: models.ReportObservationLink.objects.get(id=url_route["kwargs"]["id"]),
+    )),
 ]

@@ -10,12 +10,15 @@ from django.conf import settings
 from django.core.files.storage import FileSystemStorage
 from django.core.validators import MinValueValidator
 from django.db import models
-from django.db.models import Q
+from django.db.models import Q, Max
 from django.urls import reverse
 
 # 3rd Party Libraries
 from cvss import CVSS3, CVSS4
 from ghostwriter.collab_model.models import YDocModel, YField, YExtraFields, YTagsField
+from ghostwriter.collab_model.models.extra_fields import YExtraFieldsAccessor
+from ghostwriter.collab_model.models.tags import YTagsAccessor
+from ghostwriter.collab_model.yjs_clone import yjs_copy_map, yjs_copy_xml
 from taggit.managers import TaggableManager
 import pycrdt
 
@@ -891,16 +894,16 @@ class Observation(YDocModel):
         default="Unnamed Observation",
     )
 
-    description = YField(
+    description: pycrdt.XmlFragment = YField(
         "description",
         pycrdt.XmlFragment,
         verbose_name="Description",
     )
 
     stored_tags = TaggableManager(blank=True)
-    tags = YTagsField("stored_tags")
+    tags: YTagsAccessor = YTagsField("stored_tags")
 
-    extra_fields = YExtraFields()
+    extra_fields: YExtraFieldsAccessor = YExtraFields()
 
     class Meta:
         ordering = ["stored_title"]
@@ -921,6 +924,9 @@ class Observation(YDocModel):
         from ghostwriter.api.utils import verify_observation_access
         return verify_observation_access(user, "create")
 
+    def user_can_view(self, user) -> bool:
+        return user.is_active
+
     def user_can_edit(self, user) -> bool:
         from ghostwriter.api.utils import verify_observation_access
         return verify_observation_access(user, "edit")
@@ -929,32 +935,62 @@ class Observation(YDocModel):
         from ghostwriter.api.utils import verify_observation_access
         return verify_observation_access(user, "delete")
 
+    def create_link(self, report: Report) -> "ReportObservationLink":
+        """
+        Creates a `ReportObservationLink` from this `Observation`.
 
-class ReportObservationLink(models.Model):
+        Copies fields from `self` to the new link, as well as setting the report and position.
 
-    title = models.CharField(
-        "Title",
-        max_length=255,
-        help_text="Enter a title for this observation that will appear in the reports",
+        Does not save the new instance.
+        """
+        instance = ReportObservationLink(
+            title=self.title,
+            added_as_blank=False,
+            report=report,
+            position=ReportObservationLink.next_position_for_report(report),
+        )
+        yjs_copy_xml(self.description, instance.description)
+        yjs_copy_map(self.extra_fields.raw_map(), instance.extra_fields.raw_map())
+        yjs_copy_map(self.tags.raw_map(), instance.tags.raw_map())
+        return instance
+
+
+class ReportObservationLink(YDocModel):
+    """
+    An observation attached to a Report.
+    """
+
+    stored_title = models.TextField("Title", editable=False, blank=True)
+    title = YField(
+        "title",
+        str,
+        copy_to_field="stored_title",
+        verbose_name="Title",
+        default="Unnamed Observation",
     )
+
     position = models.IntegerField(
         "Report Position",
         default=1,
         validators=[MinValueValidator(1)],
     )
-    description = models.TextField(
-        "Description",
-        default="",
-        blank=True,
-        help_text="Provide a description for this observation that introduces it",
+
+    description = YField(
+        "description",
+        pycrdt.XmlFragment,
+        verbose_name="Description",
     )
+
     added_as_blank = models.BooleanField(
         "Added as Blank",
         default=False,
         help_text="Identify an observation that was created for this report instead of copied from the library",
     )
-    tags = TaggableManager(blank=True)
-    extra_fields = models.JSONField(default=dict)
+
+    stored_tags = TaggableManager(blank=True)
+    tags: YTagsAccessor = YTagsField("stored_tags")
+
+    extra_fields: YExtraFieldsAccessor = YExtraFields(extra_fields_model=Observation)
 
     # Foreign Keys
     report = models.ForeignKey("Report", on_delete=models.CASCADE, null=True)
@@ -972,4 +1008,46 @@ class ReportObservationLink(models.Model):
         verbose_name_plural = "Report observations"
 
     def __str__(self):
-        return str(self.title)
+        if self.stored_title:
+            return str(self.stored_title)
+        return "(Unnamed Observation)"
+
+    #def get_absolute_url(self):
+    #    return reverse("reporting:observation_detail", args=[str(self.id)])
+
+    @classmethod
+    def user_can_create(cls, user, project) -> bool:
+        # TODO: dynamic import to fix circular reference. Should refactor utils.py...
+        from ghostwriter.api.utils import verify_access
+        return verify_access(user, project)
+
+    def user_can_view(self, user) -> bool:
+        from ghostwriter.api.utils import verify_access
+        return verify_access(user, self.report.project)
+
+    def user_can_edit(self, user) -> bool:
+        return self.user_can_view(user)
+
+    def user_can_delete(self, user) -> bool:
+        return self.user_can_view(user)
+
+    def clone_to_library(self) -> Observation:
+        """
+        Creates an `Observation` from this `ReportObservationLink`.
+
+        Does not save the new instance.
+        """
+        instance = Observation(
+            title=self.title,
+        )
+        yjs_copy_xml(self.description, instance.description)
+        yjs_copy_map(self.extra_fields.raw_map(), instance.extra_fields.raw_map())
+        yjs_copy_map(self.tags.raw_map(), instance.tags.raw_map())
+        return instance
+
+    @classmethod
+    def next_position_for_report(cls, report: Report) -> int:
+        """
+        Gets the `position` for a new `ReportFindingLink`
+        """
+        return ReportObservationLink.objects.filter(report__pk=report.id).aggregate(max=Max("position"))["max"] or 0 + 1

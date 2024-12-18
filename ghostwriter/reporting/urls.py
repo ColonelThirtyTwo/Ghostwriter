@@ -4,8 +4,9 @@
 from django.urls import path
 
 # Ghostwriter Libraries
-from ghostwriter.reporting.models import Observation
+from ghostwriter.reporting.models import Observation, ReportObservationLink
 import ghostwriter.reporting.views2.observations
+import ghostwriter.reporting.views2.report_observation_link
 from ghostwriter.reporting import views
 from ghostwriter.collab_model.views import HistoryListView
 
@@ -35,7 +36,7 @@ urlpatterns += [
     ),
     path(
         "ajax/report/observation/order",
-        views.ajax_update_report_observations,
+        ghostwriter.reporting.views2.report_observation_link.ajax_update_report_observations,
         name="update_report_observations",
     ),
     path(
@@ -80,12 +81,12 @@ urlpatterns += [
     ),
     path(
         "ajax/observation/assign/<int:pk>",
-        views.AssignObservation.as_view(),
+        ghostwriter.reporting.views2.observations.ObservationToReportObservationLink.as_view(),
         name="ajax_assign_observation",
     ),
     path(
         "ajax/obseravation/delete/<int:pk>",
-        views.ReportObservationLinkDelete.as_view(),
+        ghostwriter.reporting.views2.report_observation_link.ReportObservationLinkDelete.as_view(),
         name="ajax_delete_local_observation",
     ),
     path(
@@ -152,7 +153,7 @@ urlpatterns += [
     ),
     path(
         "reports/create/blank-observation/<int:pk>",
-        views.AssignBlankObservation.as_view(),
+        ghostwriter.reporting.views2.report_observation_link.ReportObservationLinkCreateBlank.as_view(),
         name="assign_blank_observation",
     ),
     path(
@@ -206,7 +207,7 @@ urlpatterns += [
     ),
     path(
         "reports/observations/update/<int:pk>",
-        views.ReportObservationLinkUpdate.as_view(),
+        ghostwriter.reporting.views2.report_observation_link.ReportObservationLinkUpdate.as_view(),
         name="local_observation_edit",
     ),
     path(
@@ -256,8 +257,13 @@ urlpatterns += [
     ),
     path(
         "reports/observations/convert/<int:pk>",
-        views.ConvertObservation.as_view(),
+        ghostwriter.reporting.views2.report_observation_link.ConvertObservation.as_view(),
         name="convert_observation",
+    ),
+    path(
+        "reports/observations/<int:pk>/history",
+        HistoryListView.as_view(model=ReportObservationLink),
+        name="report_observation_link_history"
     ),
 ]
 

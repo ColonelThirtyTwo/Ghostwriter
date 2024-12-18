@@ -60,8 +60,6 @@ function ObservationForm() {
 }
 
 document.addEventListener("DOMContentLoaded", () => {
-    const root = createRoot(
-        document.getElementById("observation-form-container")!
-    );
+    const root = createRoot(document.getElementById("collab-form-container")!);
     root.render(<ObservationForm />);
 });

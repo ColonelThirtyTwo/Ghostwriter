@@ -11,7 +11,7 @@
 {% load static %}
 
 {% block content %}
-    <div id="{{model_name}}-form-container">
+    <div id="collab-form-container">
         <p>Loading...</p>
         <noscript><p>Javascript is required.</p></noscript>
     </div>
@@ -25,7 +25,5 @@
     {{extra_fields_spec_ser|json_script:"yjs-extra-field-specs"}}
     {% endif %}
     <link rel="stylesheet" href="{% static 'assets/collab_common.css' %}">
-    {% with script_name='assets/'|add:model_name|add:'_form.js' %}
-    <script type="module" src="{% static script_name %}"></script>
-    {% endwith %}
+    <script type="module" src="{% static form_script_name %}"></script>
 {% endblock %}
