@@ -7,6 +7,7 @@ from django.contrib.contenttypes.fields import GenericForeignKey
 from django.contrib.contenttypes.models import ContentType
 from django.conf import settings
 from django.utils.safestring import SafeString
+from import_export.fields import Field as ImportExportField
 import pycrdt._base
 
 from ghostwriter.collab_model.yjs_dump import dump_yjs_doc
@@ -333,6 +334,14 @@ class YBaseField(models.Field, ABC):
 
         Should return a BaseHistoryObserver subclass that will capture observation events and render a diff view of the field,
         or None if no diff view for this field should be rendered.
+        """
+        return None
+
+    def yjs_import_export_field(self, field_name: str, readonly: bool) -> ImportExportField | None:
+        """
+        Gets a django-import-export field for this field.
+
+        If `None` is returned, use the default field and widget.
         """
         return None
 

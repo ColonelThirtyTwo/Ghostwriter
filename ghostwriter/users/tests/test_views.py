@@ -339,18 +339,18 @@ class AvatarDownloadTest(TestCase):
 
         response = self.client_auth.get(self.uri)
         self.assertEqual(response.status_code, 200)
-        self.assertEquals(response.get("Content-Disposition"), 'attachment; filename="fake.png"')
+        self.assertEqual(response.get("Content-Disposition"), 'attachment; filename="fake.png"')
 
         if os.path.exists(self.user_profile.avatar.path):
             os.remove(self.user_profile.avatar.path)
 
         response = self.client_auth.get(self.uri)
         self.assertEqual(response.status_code, 200)
-        self.assertEquals(response.get("Content-Disposition"), 'attachment; filename="default_avatar.png"')
+        self.assertEqual(response.get("Content-Disposition"), 'attachment; filename="default_avatar.png"')
 
         self.user_profile.avatar = None
         self.user_profile.save()
 
         response = self.client_auth.get(self.uri)
         self.assertEqual(response.status_code, 200)
-        self.assertEquals(response.get("Content-Disposition"), 'attachment; filename="default_avatar.png"')
+        self.assertEqual(response.get("Content-Disposition"), 'attachment; filename="default_avatar.png"')

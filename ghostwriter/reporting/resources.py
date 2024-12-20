@@ -7,6 +7,7 @@ from import_export.widgets import ForeignKeyWidget
 from taggit.models import Tag
 
 # Ghostwriter Libraries
+from ghostwriter.collab_model.import_export import YModelResource
 from ghostwriter.modules.shared import TagFieldImport, TagWidget, taggit_before_import_row
 from ghostwriter.reporting.models import Finding, FindingType, Observation, Severity
 
@@ -70,13 +71,8 @@ class FindingResource(resources.ModelResource):
         )
 
 
-class ObservationResource(resources.ModelResource):
+class ObservationResource(YModelResource):
     """Import and export :model:`reporting.Observation`."""
-
-    tags = TagFieldImport(attribute="tags", column_name="tags", widget=TagWidget(Tag, separator=","))
-
-    def before_import_row(self, row, **kwargs):
-        taggit_before_import_row(row)
 
     class Meta:
         model = Observation

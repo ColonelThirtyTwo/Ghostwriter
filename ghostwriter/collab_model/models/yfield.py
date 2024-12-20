@@ -6,6 +6,8 @@ from django.core import checks
 from django.template.loader import render_to_string
 from django.utils.safestring import SafeString
 import pycrdt._base
+from import_export.widgets import Widget as ImportExportWidget
+from import_export.fields import Field as ImportExportField
 
 from ghostwriter.collab_model.tiptap_converters.html import TiptapToHtml
 from ghostwriter.collab_model.models.ydocmodel import BaseHistoryObserver, YBaseField, YDocModel
@@ -124,6 +126,16 @@ class YField(YBaseField, Generic[T]):
                 self.yjs_name,
             )
 
+    def yjs_import_export_field(self, field_name, readonly):
+        if self.yjs_type == pycrdt.XmlFragment:
+            return YXmlFragmentImportExportField(
+                attribute=field_name,
+                column_name=field_name,
+                readonly=readonly,
+            )
+        # TODO: other types
+        return None
+
 
 class YFieldDescriptor(Generic[T]):
     """
@@ -217,3 +229,34 @@ class XmlFragmentHistoryObserver(BaseHistoryObserver):
 
     def unobserve(self):
         self.fragment.unobserve(self.subscription)
+
+
+
+class YXmlFragmentImportExportWidget(ImportExportWidget):
+    def render(self, value, obj=None):
+        if value is None:
+            return ""
+        return str(TiptapToHtml(value))
+
+    def clean(self, value, row=None):
+        return value
+
+
+class YXmlFragmentImportExportField(ImportExportField):
+    def __init__(self, *args, **kwargs):
+        if "widget" not in kwargs:
+            kwargs["widget"] = YXmlFragmentImportExportWidget()
+        super().__init__(*args, **kwargs)
+
+    def save(self, instance, row, is_m2m=False):
+        if self.readonly:
+            return
+        cleaned = self.clean(row)
+        if cleaned is None and not self.saves_null_values:
+            return
+        fragment = self.get_value(instance)
+
+        # TODO: implement properly
+        for i in reversed(range(len(fragment.children))):
+            del fragment.children[i]
+        fragment.children.append(cleaned)

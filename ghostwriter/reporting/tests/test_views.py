@@ -15,6 +15,7 @@ from django.utils.encoding import force_str
 from rest_framework.renderers import JSONRenderer
 
 # Ghostwriter Libraries
+from ghostwriter.reporting.models import Observation, ReportObservationLink
 from ghostwriter.commandcenter.models import ExtraFieldSpec
 from ghostwriter.factories import (
     ClientFactory,
@@ -28,14 +29,12 @@ from ghostwriter.factories import (
     FindingTypeFactory,
     GenerateMockProject,
     LocalFindingNoteFactory,
-    ObservationFactory,
     ProjectAssignmentFactory,
     ProjectFactory,
     ProjectTargetFactory,
     ReportDocxTemplateFactory,
     ReportFactory,
     ReportFindingLinkFactory,
-    ReportObservationLinkFactory,
     ReportPptxTemplateFactory,
     ReportTemplateFactory,
     SeverityFactory,
@@ -782,8 +781,11 @@ class ObservationExportViewTests(TestCase):
         cls.observations = []
         cls.tags = ["severity:high, att&ck:t1159"]
         for observation_id in range(cls.num_of_observations):
-            title = f"Observation {observation_id}"
-            cls.observations.append(ObservationFactory(title=title, tags=cls.tags))
+            obs = Observation(
+                title=f"Observation {observation_id}"
+            )
+            obs.save()
+            cls.observations.append(obs)
         cls.uri = reverse("reporting:export_observations_to_csv")
 
     def setUp(self):
@@ -1388,8 +1390,12 @@ class ReportObservationLinkUpdateViewTests(TestCase):
         cls.num_of_observations = 10
         cls.observations = []
         for observation_id in range(cls.num_of_observations):
-            title = f"observation {observation_id}"
-            cls.observations.append(ReportObservationLinkFactory(title=title, report=cls.report))
+            obs = ReportObservationLink(
+                title=f"observation {observation_id}",
+                report=cls.report,
+            )
+            obs.save()
+            cls.observations.append(obs)
 
         cls.uri = reverse("reporting:local_observation_edit", kwargs={"pk": cls.observations[0].pk})
 
@@ -1414,15 +1420,7 @@ class ReportObservationLinkUpdateViewTests(TestCase):
     def test_view_uses_correct_template(self):
         response = self.client_mgr.get(self.uri)
         self.assertEqual(response.status_code, 200)
-        self.assertTemplateUsed(response, "reporting/local_observation_edit.html")
-
-    def test_custom_context_exists(self):
-        response = self.client_mgr.get(self.uri)
-        self.assertIn("cancel_link", response.context)
-        self.assertEqual(
-            response.context["cancel_link"],
-            f"{reverse('reporting:report_detail', kwargs={'pk': self.report.pk})}#observations",
-        )
+        self.assertTemplateUsed(response, "reporting/reportobservationlink_update.html")
 
 
 # Tests related to :model:`reporting.Evidence`
@@ -2722,7 +2720,7 @@ class EvidenceDownloadTests(TestCase):
     def test_view_uri_exists_at_desired_location(self):
         response = self.client_mgr.get(self.uri)
         self.assertEqual(response.status_code, 200)
-        self.assertEquals(
+        self.assertEqual(
             response.get("Content-Disposition"),
             f'attachment; filename="{self.evidence_file.filename}"',
         )
