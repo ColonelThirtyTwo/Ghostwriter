@@ -1,31 +1,34 @@
 /// Last-write-wins editors. They will sync but don't have doc-style collaborative editing - the latest update will overwrite the others.
 
 import * as Y from "yjs";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useReducer, useState } from "react";
 
 export function usePlainField<T>(
     map: Y.Map<T>,
     key: string,
     defaultValue: T
 ): [T, (v: T) => void] {
-    const [value, setValue] = useState<T>(() => map.get(key) ?? defaultValue);
+    const forceUpdate = useReducer((x) => x + 1, 0)[1];
 
     useEffect(() => {
-        const cb = (ev: Y.YMapEvent<T>) => {
-            if (ev.keysChanged.has(key)) setValue(map.get(key)!);
+        const cbObserve = (ev: Y.YMapEvent<T>) => {
+            if (ev.keysChanged.has(key)) forceUpdate();
         };
-        map.observe(cb);
+        map.observe(cbObserve);
         return () => {
-            map.unobserve(cb);
+            map.unobserve(cbObserve);
         };
     });
 
     const setInDoc = useMemo(
         () => (v: T) => {
             map.set(key, v);
+            forceUpdate();
         },
         [map]
     );
+
+    const value = map.get(key) ?? defaultValue;
 
     return [value, setInDoc];
 }
@@ -57,7 +60,7 @@ export function BaseInput<T>(props: {
             onBlur={() => {
                 if (formValue === null) return;
                 const parsed = props.parse(formValue);
-                if (parsed === null) {
+                if (parsed === null || parsed === docValue) {
                     setFormValue(null);
                     return;
                 }
@@ -67,7 +70,7 @@ export function BaseInput<T>(props: {
             onKeyUp={(ev) => {
                 if (ev.key !== "Enter" || formValue === null) return;
                 const parsed = props.parse(formValue);
-                if (parsed === null) {
+                if (parsed === null || parsed === docValue) {
                     setFormValue(null);
                     return;
                 }

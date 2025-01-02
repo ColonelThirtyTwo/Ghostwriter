@@ -11,7 +11,7 @@
     </div>
 
     {% for history_instance, changes in history_deltas %}
-        <div class="card mb-3">
+        <div class="card mb-3" id="history_entry_{{history_instance.id}}">
             <div class="card-header">
                 {{history_instance}}
             </div>
