@@ -218,7 +218,7 @@ class YDocModel(models.Model):
 
         super().__init__(*args, **kwargs)
 
-        if loading_yjs_doc is not None:
+        if loading_yjs_doc is None:
             # Run YFieldOnModelInit
             for field in self.yfields():
                 field.yjs_initialize_doc(self)

@@ -3,7 +3,7 @@ from typing import Any, Callable, Coroutine, Generic, TypeVar
 import uuid
 import logging
 from django.db import transaction
-from django.contrib.auth.models import User
+from django.contrib.auth import get_user_model
 from django.apps import apps
 import pycrdt
 from pycrdt_websocket.django_channels_consumer import YjsConsumer
@@ -236,8 +236,8 @@ class _PendingState:
             instance.save(author=self.user_pk)
 
         if logger.isEnabledFor(logging.DEBUG):
-            user = User.objects.get(pk=self.user_pk)
-            logger.debug("Update from %s: %r", user, instance)
+            user = get_user_model().objects.get(pk=self.user_pk)
+            logger.debug("Update from %s for %r: %s", user, instance, instance.dump())
 
 
 class YjsSaverWorkerConsumer(AsyncConsumer):
