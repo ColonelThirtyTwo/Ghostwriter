@@ -2,65 +2,18 @@
 //
 // Dynamically converts the standard models from the GraphQL API to/from YJS.
 
-// Apollo's lib is commonjs and tsx doesn't see its exports, so work around it.
-import * as apollo from "@apollo/client/core";
-const { ApolloClient, createHttpLink, InMemoryCache } = apollo;
-
 import { randomUUID } from "node:crypto";
 import { Hocuspocus } from "@hocuspocus/server";
-import { setContext } from "@apollo/client/link/context";
 import { env } from "node:process";
 import * as Y from "yjs";
 import pino from "pino";
 import { type Logger } from "pino";
-
-import { type ModelHandler } from "./base_handler";
-import ObservationHandler from "./handlers/observation";
-import ReportObservationLinkHandler from "./handlers/report_observation_link";
-import FindingHandler from "./handlers/finding";
-import ReportFindingLinkHandler from "./handlers/report_finding_link";
-import ReportHandler from "./handlers/report";
-
-// Extend this with your model handlers. See how-to-collab.md.
-const HANDLERS: Map<string, ModelHandler> = new Map([
-    ["observation", ObservationHandler],
-    ["report_observation_link", ReportObservationLinkHandler],
-    ["finding", FindingHandler],
-    ["report_finding_link", ReportFindingLinkHandler],
-    ["report", ReportHandler],
-]);
+import HANDLERS from "./handlers";
+import { createApolloClient } from "./client";
 
 // Graphql Client
 
-const httpLink = createHttpLink({
-    uri: "http://graphql_engine:8080/v1/graphql",
-});
-
-const authLink = setContext((_, { headers }) => {
-    return {
-        headers: {
-            ...headers,
-            "x-hasura-admin-secret": (env as any)[
-                "HASURA_GRAPHQL_ADMIN_SECRET"
-            ],
-        },
-    };
-});
-
-const gqlClient = new ApolloClient({
-    link: authLink.concat(httpLink),
-    cache: new InMemoryCache(),
-    defaultOptions: {
-        query: {
-            fetchPolicy: "no-cache",
-            errorPolicy: "all",
-        },
-        watchQuery: {
-            fetchPolicy: "no-cache",
-            errorPolicy: "all",
-        },
-    },
-});
+const gqlClient = createApolloClient();
 
 // Hocuspocus collab server
 

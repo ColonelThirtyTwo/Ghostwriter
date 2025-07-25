@@ -8,7 +8,8 @@
         "watch-frontend-dev": "NODE_ENV=development vite build -c vite.config.frontend.ts --mode development",
         "build-collab-server-prod": "vite build -c vite.config.collab_server.ts --mode production",
         "build-collab-server-dev": "NODE_ENV=development vite build -c vite.config.collab_server.ts --mode development",
-        "run-collab-server": "node ./dist_collab_server/index.js"
+        "run-collab-server": "node ./dist_collab_server/index.js",
+        "stress-test": "NODE_ENV=development vite build -c vite.config.stress_test.ts --mode development && node ./dist_stress_test/index.js"
     },
     "devDependencies": {
         "@graphql-codegen/cli": "^5.0.3",
