@@ -661,6 +661,13 @@ class ProjectNote(models.Model):
     def __str__(self):
         return f"{self.project}: {self.timestamp} - {self.note}"
 
+    @classmethod
+    def user_can_create(cls, user, project: Project) -> bool:
+        return project.user_can_edit(user)
+
+    def user_can_edit(self, user) -> bool:
+        return self.project.user_can_edit(user)
+
 
 class ProjectScope(models.Model):
     """Stores an individual scope list, related to an individual :model:`rolodex.Project`."""

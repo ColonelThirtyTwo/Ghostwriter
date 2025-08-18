@@ -3941,6 +3941,17 @@ export type CompanyInfo_Variance_Fields = {
   id?: Maybe<Scalars['Float']['output']>;
 };
 
+export type CreateUserResponse = {
+  __typename?: 'createUserResponse';
+  email: Scalars['String']['output'];
+  id: Scalars['Int']['output'];
+  name: Scalars['String']['output'];
+  result: Scalars['String']['output'];
+  role: Scalars['String']['output'];
+  user?: Maybe<User>;
+  username: Scalars['String']['output'];
+};
+
 /** ordering argument of a cursor */
 export enum Cursor_Ordering {
   /** ascending ordering of the cursor */
@@ -7956,6 +7967,7 @@ export type Evidence_Variance_Order_By = {
 /** columns and relationships of "commandcenter_extrafieldmodel" */
 export type ExtraFieldModel = {
   __typename?: 'extraFieldModel';
+  is_collab_editable: Scalars['Boolean']['output'];
   modelDisplayName: Scalars['String']['output'];
   modelInternalName: Scalars['String']['output'];
 };
@@ -7987,6 +7999,7 @@ export type ExtraFieldModel_Bool_Exp = {
   _and?: InputMaybe<Array<ExtraFieldModel_Bool_Exp>>;
   _not?: InputMaybe<ExtraFieldModel_Bool_Exp>;
   _or?: InputMaybe<Array<ExtraFieldModel_Bool_Exp>>;
+  is_collab_editable?: InputMaybe<Boolean_Comparison_Exp>;
   modelDisplayName?: InputMaybe<String_Comparison_Exp>;
   modelInternalName?: InputMaybe<String_Comparison_Exp>;
 };
@@ -7999,6 +8012,7 @@ export enum ExtraFieldModel_Constraint {
 
 /** input type for inserting data into table "commandcenter_extrafieldmodel" */
 export type ExtraFieldModel_Insert_Input = {
+  is_collab_editable?: InputMaybe<Scalars['Boolean']['input']>;
   modelDisplayName?: InputMaybe<Scalars['String']['input']>;
   modelInternalName?: InputMaybe<Scalars['String']['input']>;
 };
@@ -8042,6 +8056,7 @@ export type ExtraFieldModel_On_Conflict = {
 
 /** Ordering options when selecting data from "commandcenter_extrafieldmodel". */
 export type ExtraFieldModel_Order_By = {
+  is_collab_editable?: InputMaybe<Order_By>;
   modelDisplayName?: InputMaybe<Order_By>;
   modelInternalName?: InputMaybe<Order_By>;
 };
@@ -8054,6 +8069,8 @@ export type ExtraFieldModel_Pk_Columns_Input = {
 /** select columns of table "commandcenter_extrafieldmodel" */
 export enum ExtraFieldModel_Select_Column {
   /** column name */
+  IsCollabEditable = 'is_collab_editable',
+  /** column name */
   ModelDisplayName = 'modelDisplayName',
   /** column name */
   ModelInternalName = 'modelInternalName'
@@ -8061,6 +8078,7 @@ export enum ExtraFieldModel_Select_Column {
 
 /** input type for updating data in table "commandcenter_extrafieldmodel" */
 export type ExtraFieldModel_Set_Input = {
+  is_collab_editable?: InputMaybe<Scalars['Boolean']['input']>;
   modelDisplayName?: InputMaybe<Scalars['String']['input']>;
   modelInternalName?: InputMaybe<Scalars['String']['input']>;
 };
@@ -8075,12 +8093,15 @@ export type ExtraFieldModel_Stream_Cursor_Input = {
 
 /** Initial value of the column from where the streaming should start */
 export type ExtraFieldModel_Stream_Cursor_Value_Input = {
+  is_collab_editable?: InputMaybe<Scalars['Boolean']['input']>;
   modelDisplayName?: InputMaybe<Scalars['String']['input']>;
   modelInternalName?: InputMaybe<Scalars['String']['input']>;
 };
 
 /** update columns of table "commandcenter_extrafieldmodel" */
 export enum ExtraFieldModel_Update_Column {
+  /** column name */
+  IsCollabEditable = 'is_collab_editable',
   /** column name */
   ModelDisplayName = 'modelDisplayName',
   /** column name */
@@ -10941,6 +10962,8 @@ export type Mutation_Root = {
   checkoutDomain?: Maybe<CheckoutResponse>;
   /** Attempt to checkout a server for a project */
   checkoutServer?: Maybe<CheckoutResponse>;
+  /** Attempt to create a new user with the specified details */
+  createUser?: Maybe<CreateUserResponse>;
   /** Delete the specified domain checkout and release the domain if deleted entry was the latest checkout */
   deleteDomainCheckout?: Maybe<CheckoutResponse>;
   /** Delete the specified server checkout and release the server if deleted entry was the latest checkout */
@@ -11910,6 +11933,25 @@ export type Mutation_RootCheckoutServerArgs = {
   serverId: Scalars['Int']['input'];
   serverRoleId: Scalars['Int']['input'];
   startDate: Scalars['date']['input'];
+};
+
+
+/** mutation root */
+export type Mutation_RootCreateUserArgs = {
+  email: Scalars['String']['input'];
+  enableFindingCreate?: InputMaybe<Scalars['Boolean']['input']>;
+  enableFindingDelete?: InputMaybe<Scalars['Boolean']['input']>;
+  enableFindingEdit?: InputMaybe<Scalars['Boolean']['input']>;
+  enableObservationCreate?: InputMaybe<Scalars['Boolean']['input']>;
+  enableObservationDelete?: InputMaybe<Scalars['Boolean']['input']>;
+  enableObservationEdit?: InputMaybe<Scalars['Boolean']['input']>;
+  name: Scalars['String']['input'];
+  password: Scalars['String']['input'];
+  phone?: InputMaybe<Scalars['String']['input']>;
+  require2fa?: InputMaybe<Scalars['Boolean']['input']>;
+  role: Scalars['String']['input'];
+  timezone?: InputMaybe<Scalars['String']['input']>;
+  username: Scalars['String']['input'];
 };
 
 
@@ -17687,6 +17729,9 @@ export type Project = {
   assignments: Array<ProjectAssignment>;
   /** An aggregate relationship */
   assignments_aggregate: ProjectAssignment_Aggregate;
+  bloodhound_api_key_id: Scalars['String']['output'];
+  bloodhound_api_key_token: Scalars['String']['output'];
+  bloodhound_api_root_url: Scalars['String']['output'];
   /** An object relationship */
   client: Client;
   clientId: Scalars['bigint']['output'];
@@ -17700,6 +17745,10 @@ export type Project = {
   /** An aggregate relationship */
   comments_aggregate: ProjectNote_Aggregate;
   complete: Scalars['Boolean']['output'];
+  /** An array relationship */
+  contacts: Array<ProjectContact>;
+  /** An aggregate relationship */
+  contacts_aggregate: ProjectContact_Aggregate;
   /** An array relationship */
   deconflictions: Array<Deconfliction>;
   /** An aggregate relationship */
@@ -17839,6 +17888,26 @@ export type ProjectComments_AggregateArgs = {
   offset?: InputMaybe<Scalars['Int']['input']>;
   order_by?: InputMaybe<Array<ProjectNote_Order_By>>;
   where?: InputMaybe<ProjectNote_Bool_Exp>;
+};
+
+
+/** columns and relationships of "rolodex_project" */
+export type ProjectContactsArgs = {
+  distinct_on?: InputMaybe<Array<ProjectContact_Select_Column>>;
+  limit?: InputMaybe<Scalars['Int']['input']>;
+  offset?: InputMaybe<Scalars['Int']['input']>;
+  order_by?: InputMaybe<Array<ProjectContact_Order_By>>;
+  where?: InputMaybe<ProjectContact_Bool_Exp>;
+};
+
+
+/** columns and relationships of "rolodex_project" */
+export type ProjectContacts_AggregateArgs = {
+  distinct_on?: InputMaybe<Array<ProjectContact_Select_Column>>;
+  limit?: InputMaybe<Scalars['Int']['input']>;
+  offset?: InputMaybe<Scalars['Int']['input']>;
+  order_by?: InputMaybe<Array<ProjectContact_Order_By>>;
+  where?: InputMaybe<ProjectContact_Bool_Exp>;
 };
 
 
@@ -18508,6 +18577,33 @@ export type ProjectContact_Aggregate = {
   nodes: Array<ProjectContact>;
 };
 
+export type ProjectContact_Aggregate_Bool_Exp = {
+  bool_and?: InputMaybe<ProjectContact_Aggregate_Bool_Exp_Bool_And>;
+  bool_or?: InputMaybe<ProjectContact_Aggregate_Bool_Exp_Bool_Or>;
+  count?: InputMaybe<ProjectContact_Aggregate_Bool_Exp_Count>;
+};
+
+export type ProjectContact_Aggregate_Bool_Exp_Bool_And = {
+  arguments: ProjectContact_Select_Column_ProjectContact_Aggregate_Bool_Exp_Bool_And_Arguments_Columns;
+  distinct?: InputMaybe<Scalars['Boolean']['input']>;
+  filter?: InputMaybe<ProjectContact_Bool_Exp>;
+  predicate: Boolean_Comparison_Exp;
+};
+
+export type ProjectContact_Aggregate_Bool_Exp_Bool_Or = {
+  arguments: ProjectContact_Select_Column_ProjectContact_Aggregate_Bool_Exp_Bool_Or_Arguments_Columns;
+  distinct?: InputMaybe<Scalars['Boolean']['input']>;
+  filter?: InputMaybe<ProjectContact_Bool_Exp>;
+  predicate: Boolean_Comparison_Exp;
+};
+
+export type ProjectContact_Aggregate_Bool_Exp_Count = {
+  arguments?: InputMaybe<Array<ProjectContact_Select_Column>>;
+  distinct?: InputMaybe<Scalars['Boolean']['input']>;
+  filter?: InputMaybe<ProjectContact_Bool_Exp>;
+  predicate: Int_Comparison_Exp;
+};
+
 /** aggregate fields of "rolodex_projectcontact" */
 export type ProjectContact_Aggregate_Fields = {
   __typename?: 'projectContact_aggregate_fields';
@@ -18531,11 +18627,39 @@ export type ProjectContact_Aggregate_FieldsCountArgs = {
   distinct?: InputMaybe<Scalars['Boolean']['input']>;
 };
 
+/** order by aggregate values of table "rolodex_projectcontact" */
+export type ProjectContact_Aggregate_Order_By = {
+  avg?: InputMaybe<ProjectContact_Avg_Order_By>;
+  count?: InputMaybe<Order_By>;
+  max?: InputMaybe<ProjectContact_Max_Order_By>;
+  min?: InputMaybe<ProjectContact_Min_Order_By>;
+  stddev?: InputMaybe<ProjectContact_Stddev_Order_By>;
+  stddev_pop?: InputMaybe<ProjectContact_Stddev_Pop_Order_By>;
+  stddev_samp?: InputMaybe<ProjectContact_Stddev_Samp_Order_By>;
+  sum?: InputMaybe<ProjectContact_Sum_Order_By>;
+  var_pop?: InputMaybe<ProjectContact_Var_Pop_Order_By>;
+  var_samp?: InputMaybe<ProjectContact_Var_Samp_Order_By>;
+  variance?: InputMaybe<ProjectContact_Variance_Order_By>;
+};
+
+/** input type for inserting array relation for remote table "rolodex_projectcontact" */
+export type ProjectContact_Arr_Rel_Insert_Input = {
+  data: Array<ProjectContact_Insert_Input>;
+  /** upsert condition */
+  on_conflict?: InputMaybe<ProjectContact_On_Conflict>;
+};
+
 /** aggregate avg on columns */
 export type ProjectContact_Avg_Fields = {
   __typename?: 'projectContact_avg_fields';
   id?: Maybe<Scalars['Float']['output']>;
   projectId?: Maybe<Scalars['Float']['output']>;
+};
+
+/** order by avg() on columns of table "rolodex_projectcontact" */
+export type ProjectContact_Avg_Order_By = {
+  id?: InputMaybe<Order_By>;
+  projectId?: InputMaybe<Order_By>;
 };
 
 /** Boolean expression to filter rows from the table "rolodex_projectcontact". All fields are combined with a logical 'AND'. */
@@ -18596,6 +18720,18 @@ export type ProjectContact_Max_Fields = {
   timezone?: Maybe<Scalars['String']['output']>;
 };
 
+/** order by max() on columns of table "rolodex_projectcontact" */
+export type ProjectContact_Max_Order_By = {
+  email?: InputMaybe<Order_By>;
+  id?: InputMaybe<Order_By>;
+  job_title?: InputMaybe<Order_By>;
+  name?: InputMaybe<Order_By>;
+  note?: InputMaybe<Order_By>;
+  phone?: InputMaybe<Order_By>;
+  projectId?: InputMaybe<Order_By>;
+  timezone?: InputMaybe<Order_By>;
+};
+
 /** aggregate min on columns */
 export type ProjectContact_Min_Fields = {
   __typename?: 'projectContact_min_fields';
@@ -18607,6 +18743,18 @@ export type ProjectContact_Min_Fields = {
   phone?: Maybe<Scalars['String']['output']>;
   projectId?: Maybe<Scalars['bigint']['output']>;
   timezone?: Maybe<Scalars['String']['output']>;
+};
+
+/** order by min() on columns of table "rolodex_projectcontact" */
+export type ProjectContact_Min_Order_By = {
+  email?: InputMaybe<Order_By>;
+  id?: InputMaybe<Order_By>;
+  job_title?: InputMaybe<Order_By>;
+  name?: InputMaybe<Order_By>;
+  note?: InputMaybe<Order_By>;
+  phone?: InputMaybe<Order_By>;
+  projectId?: InputMaybe<Order_By>;
+  timezone?: InputMaybe<Order_By>;
 };
 
 /** response of any mutation on the table "rolodex_projectcontact" */
@@ -18666,6 +18814,18 @@ export enum ProjectContact_Select_Column {
   Timezone = 'timezone'
 }
 
+/** select "projectContact_aggregate_bool_exp_bool_and_arguments_columns" columns of table "rolodex_projectcontact" */
+export enum ProjectContact_Select_Column_ProjectContact_Aggregate_Bool_Exp_Bool_And_Arguments_Columns {
+  /** column name */
+  Primary = 'primary'
+}
+
+/** select "projectContact_aggregate_bool_exp_bool_or_arguments_columns" columns of table "rolodex_projectcontact" */
+export enum ProjectContact_Select_Column_ProjectContact_Aggregate_Bool_Exp_Bool_Or_Arguments_Columns {
+  /** column name */
+  Primary = 'primary'
+}
+
 /** input type for updating data in table "rolodex_projectcontact" */
 export type ProjectContact_Set_Input = {
   email?: InputMaybe<Scalars['String']['input']>;
@@ -18686,6 +18846,12 @@ export type ProjectContact_Stddev_Fields = {
   projectId?: Maybe<Scalars['Float']['output']>;
 };
 
+/** order by stddev() on columns of table "rolodex_projectcontact" */
+export type ProjectContact_Stddev_Order_By = {
+  id?: InputMaybe<Order_By>;
+  projectId?: InputMaybe<Order_By>;
+};
+
 /** aggregate stddev_pop on columns */
 export type ProjectContact_Stddev_Pop_Fields = {
   __typename?: 'projectContact_stddev_pop_fields';
@@ -18693,11 +18859,23 @@ export type ProjectContact_Stddev_Pop_Fields = {
   projectId?: Maybe<Scalars['Float']['output']>;
 };
 
+/** order by stddev_pop() on columns of table "rolodex_projectcontact" */
+export type ProjectContact_Stddev_Pop_Order_By = {
+  id?: InputMaybe<Order_By>;
+  projectId?: InputMaybe<Order_By>;
+};
+
 /** aggregate stddev_samp on columns */
 export type ProjectContact_Stddev_Samp_Fields = {
   __typename?: 'projectContact_stddev_samp_fields';
   id?: Maybe<Scalars['Float']['output']>;
   projectId?: Maybe<Scalars['Float']['output']>;
+};
+
+/** order by stddev_samp() on columns of table "rolodex_projectcontact" */
+export type ProjectContact_Stddev_Samp_Order_By = {
+  id?: InputMaybe<Order_By>;
+  projectId?: InputMaybe<Order_By>;
 };
 
 /** Streaming cursor of the table "projectContact" */
@@ -18726,6 +18904,12 @@ export type ProjectContact_Sum_Fields = {
   __typename?: 'projectContact_sum_fields';
   id?: Maybe<Scalars['bigint']['output']>;
   projectId?: Maybe<Scalars['bigint']['output']>;
+};
+
+/** order by sum() on columns of table "rolodex_projectcontact" */
+export type ProjectContact_Sum_Order_By = {
+  id?: InputMaybe<Order_By>;
+  projectId?: InputMaybe<Order_By>;
 };
 
 /** update columns of table "rolodex_projectcontact" */
@@ -18766,6 +18950,12 @@ export type ProjectContact_Var_Pop_Fields = {
   projectId?: Maybe<Scalars['Float']['output']>;
 };
 
+/** order by var_pop() on columns of table "rolodex_projectcontact" */
+export type ProjectContact_Var_Pop_Order_By = {
+  id?: InputMaybe<Order_By>;
+  projectId?: InputMaybe<Order_By>;
+};
+
 /** aggregate var_samp on columns */
 export type ProjectContact_Var_Samp_Fields = {
   __typename?: 'projectContact_var_samp_fields';
@@ -18773,11 +18963,23 @@ export type ProjectContact_Var_Samp_Fields = {
   projectId?: Maybe<Scalars['Float']['output']>;
 };
 
+/** order by var_samp() on columns of table "rolodex_projectcontact" */
+export type ProjectContact_Var_Samp_Order_By = {
+  id?: InputMaybe<Order_By>;
+  projectId?: InputMaybe<Order_By>;
+};
+
 /** aggregate variance on columns */
 export type ProjectContact_Variance_Fields = {
   __typename?: 'projectContact_variance_fields';
   id?: Maybe<Scalars['Float']['output']>;
   projectId?: Maybe<Scalars['Float']['output']>;
+};
+
+/** order by variance() on columns of table "rolodex_projectcontact" */
+export type ProjectContact_Variance_Order_By = {
+  id?: InputMaybe<Order_By>;
+  projectId?: InputMaybe<Order_By>;
 };
 
 /** columns and relationships of "rolodex_projectinvite" */
@@ -20108,6 +20310,9 @@ export type Project_Bool_Exp = {
   archives_aggregate?: InputMaybe<Archive_Aggregate_Bool_Exp>;
   assignments?: InputMaybe<ProjectAssignment_Bool_Exp>;
   assignments_aggregate?: InputMaybe<ProjectAssignment_Aggregate_Bool_Exp>;
+  bloodhound_api_key_id?: InputMaybe<String_Comparison_Exp>;
+  bloodhound_api_key_token?: InputMaybe<String_Comparison_Exp>;
+  bloodhound_api_root_url?: InputMaybe<String_Comparison_Exp>;
   client?: InputMaybe<Client_Bool_Exp>;
   clientId?: InputMaybe<Bigint_Comparison_Exp>;
   cloudServers?: InputMaybe<CloudServer_Bool_Exp>;
@@ -20116,6 +20321,8 @@ export type Project_Bool_Exp = {
   comments?: InputMaybe<ProjectNote_Bool_Exp>;
   comments_aggregate?: InputMaybe<ProjectNote_Aggregate_Bool_Exp>;
   complete?: InputMaybe<Boolean_Comparison_Exp>;
+  contacts?: InputMaybe<ProjectContact_Bool_Exp>;
+  contacts_aggregate?: InputMaybe<ProjectContact_Aggregate_Bool_Exp>;
   deconflictions?: InputMaybe<Deconfliction_Bool_Exp>;
   deconflictions_aggregate?: InputMaybe<Deconfliction_Aggregate_Bool_Exp>;
   domainServerConnections?: InputMaybe<DomainServerConnection_Bool_Exp>;
@@ -20186,12 +20393,16 @@ export type Project_Inc_Input = {
 export type Project_Insert_Input = {
   archives?: InputMaybe<Archive_Arr_Rel_Insert_Input>;
   assignments?: InputMaybe<ProjectAssignment_Arr_Rel_Insert_Input>;
+  bloodhound_api_key_id?: InputMaybe<Scalars['String']['input']>;
+  bloodhound_api_key_token?: InputMaybe<Scalars['String']['input']>;
+  bloodhound_api_root_url?: InputMaybe<Scalars['String']['input']>;
   client?: InputMaybe<Client_Obj_Rel_Insert_Input>;
   clientId?: InputMaybe<Scalars['bigint']['input']>;
   cloudServers?: InputMaybe<CloudServer_Arr_Rel_Insert_Input>;
   codename?: InputMaybe<Scalars['String']['input']>;
   comments?: InputMaybe<ProjectNote_Arr_Rel_Insert_Input>;
   complete?: InputMaybe<Scalars['Boolean']['input']>;
+  contacts?: InputMaybe<ProjectContact_Arr_Rel_Insert_Input>;
   deconflictions?: InputMaybe<Deconfliction_Arr_Rel_Insert_Input>;
   domainServerConnections?: InputMaybe<DomainServerConnection_Arr_Rel_Insert_Input>;
   domains?: InputMaybe<DomainCheckout_Arr_Rel_Insert_Input>;
@@ -20221,6 +20432,9 @@ export type Project_Insert_Input = {
 /** aggregate max on columns */
 export type Project_Max_Fields = {
   __typename?: 'project_max_fields';
+  bloodhound_api_key_id?: Maybe<Scalars['String']['output']>;
+  bloodhound_api_key_token?: Maybe<Scalars['String']['output']>;
+  bloodhound_api_root_url?: Maybe<Scalars['String']['output']>;
   clientId?: Maybe<Scalars['bigint']['output']>;
   codename?: Maybe<Scalars['String']['output']>;
   endDate?: Maybe<Scalars['date']['output']>;
@@ -20235,6 +20449,9 @@ export type Project_Max_Fields = {
 
 /** order by max() on columns of table "rolodex_project" */
 export type Project_Max_Order_By = {
+  bloodhound_api_key_id?: InputMaybe<Order_By>;
+  bloodhound_api_key_token?: InputMaybe<Order_By>;
+  bloodhound_api_root_url?: InputMaybe<Order_By>;
   clientId?: InputMaybe<Order_By>;
   codename?: InputMaybe<Order_By>;
   endDate?: InputMaybe<Order_By>;
@@ -20250,6 +20467,9 @@ export type Project_Max_Order_By = {
 /** aggregate min on columns */
 export type Project_Min_Fields = {
   __typename?: 'project_min_fields';
+  bloodhound_api_key_id?: Maybe<Scalars['String']['output']>;
+  bloodhound_api_key_token?: Maybe<Scalars['String']['output']>;
+  bloodhound_api_root_url?: Maybe<Scalars['String']['output']>;
   clientId?: Maybe<Scalars['bigint']['output']>;
   codename?: Maybe<Scalars['String']['output']>;
   endDate?: Maybe<Scalars['date']['output']>;
@@ -20264,6 +20484,9 @@ export type Project_Min_Fields = {
 
 /** order by min() on columns of table "rolodex_project" */
 export type Project_Min_Order_By = {
+  bloodhound_api_key_id?: InputMaybe<Order_By>;
+  bloodhound_api_key_token?: InputMaybe<Order_By>;
+  bloodhound_api_root_url?: InputMaybe<Order_By>;
   clientId?: InputMaybe<Order_By>;
   codename?: InputMaybe<Order_By>;
   endDate?: InputMaybe<Order_By>;
@@ -20303,12 +20526,16 @@ export type Project_On_Conflict = {
 export type Project_Order_By = {
   archives_aggregate?: InputMaybe<Archive_Aggregate_Order_By>;
   assignments_aggregate?: InputMaybe<ProjectAssignment_Aggregate_Order_By>;
+  bloodhound_api_key_id?: InputMaybe<Order_By>;
+  bloodhound_api_key_token?: InputMaybe<Order_By>;
+  bloodhound_api_root_url?: InputMaybe<Order_By>;
   client?: InputMaybe<Client_Order_By>;
   clientId?: InputMaybe<Order_By>;
   cloudServers_aggregate?: InputMaybe<CloudServer_Aggregate_Order_By>;
   codename?: InputMaybe<Order_By>;
   comments_aggregate?: InputMaybe<ProjectNote_Aggregate_Order_By>;
   complete?: InputMaybe<Order_By>;
+  contacts_aggregate?: InputMaybe<ProjectContact_Aggregate_Order_By>;
   deconflictions_aggregate?: InputMaybe<Deconfliction_Aggregate_Order_By>;
   domainServerConnections_aggregate?: InputMaybe<DomainServerConnection_Aggregate_Order_By>;
   domains_aggregate?: InputMaybe<DomainCheckout_Aggregate_Order_By>;
@@ -20347,6 +20574,12 @@ export type Project_Prepend_Input = {
 
 /** select columns of table "rolodex_project" */
 export enum Project_Select_Column {
+  /** column name */
+  BloodhoundApiKeyId = 'bloodhound_api_key_id',
+  /** column name */
+  BloodhoundApiKeyToken = 'bloodhound_api_key_token',
+  /** column name */
+  BloodhoundApiRootUrl = 'bloodhound_api_root_url',
   /** column name */
   ClientId = 'clientId',
   /** column name */
@@ -20391,6 +20624,9 @@ export enum Project_Select_Column_Project_Aggregate_Bool_Exp_Bool_Or_Arguments_C
 
 /** input type for updating data in table "rolodex_project" */
 export type Project_Set_Input = {
+  bloodhound_api_key_id?: InputMaybe<Scalars['String']['input']>;
+  bloodhound_api_key_token?: InputMaybe<Scalars['String']['input']>;
+  bloodhound_api_root_url?: InputMaybe<Scalars['String']['input']>;
   clientId?: InputMaybe<Scalars['bigint']['input']>;
   codename?: InputMaybe<Scalars['String']['input']>;
   complete?: InputMaybe<Scalars['Boolean']['input']>;
@@ -20468,6 +20704,9 @@ export type Project_Stream_Cursor_Input = {
 
 /** Initial value of the column from where the streaming should start */
 export type Project_Stream_Cursor_Value_Input = {
+  bloodhound_api_key_id?: InputMaybe<Scalars['String']['input']>;
+  bloodhound_api_key_token?: InputMaybe<Scalars['String']['input']>;
+  bloodhound_api_root_url?: InputMaybe<Scalars['String']['input']>;
   clientId?: InputMaybe<Scalars['bigint']['input']>;
   codename?: InputMaybe<Scalars['String']['input']>;
   complete?: InputMaybe<Scalars['Boolean']['input']>;
@@ -20503,6 +20742,12 @@ export type Project_Sum_Order_By = {
 
 /** update columns of table "rolodex_project" */
 export enum Project_Update_Column {
+  /** column name */
+  BloodhoundApiKeyId = 'bloodhound_api_key_id',
+  /** column name */
+  BloodhoundApiKeyToken = 'bloodhound_api_key_token',
+  /** column name */
+  BloodhoundApiRootUrl = 'bloodhound_api_root_url',
   /** column name */
   ClientId = 'clientId',
   /** column name */
@@ -20719,9 +20964,9 @@ export type Query_Root = {
   domain_aggregate: Domain_Aggregate;
   /** fetch data from the table: "shepherd_domain" using primary key columns */
   domain_by_pk?: Maybe<Domain>;
-  /** fetch data from the table: "reporting_evidence" */
+  /** An array relationship */
   evidence: Array<Evidence>;
-  /** fetch aggregated fields from the table: "reporting_evidence" */
+  /** An aggregate relationship */
   evidence_aggregate: Evidence_Aggregate;
   /** fetch data from the table: "reporting_evidence" using primary key columns */
   evidence_by_pk?: Maybe<Evidence>;
@@ -22549,6 +22794,10 @@ export type Report = {
   /** An object relationship */
   docxTemplate?: Maybe<Template>;
   docxTemplateId?: Maybe<Scalars['bigint']['output']>;
+  /** An array relationship */
+  evidence: Array<Evidence>;
+  /** An aggregate relationship */
+  evidence_aggregate: Evidence_Aggregate;
   extraFields: Scalars['jsonb']['output'];
   /** An array relationship */
   findings: Array<ReportedFinding>;
@@ -22556,6 +22805,10 @@ export type Report = {
   findings_aggregate: ReportedFinding_Aggregate;
   id: Scalars['bigint']['output'];
   last_update: Scalars['date']['output'];
+  /** An array relationship */
+  observations: Array<Reporting_Reportobservationlink>;
+  /** An aggregate relationship */
+  observations_aggregate: Reporting_Reportobservationlink_Aggregate;
   /** An object relationship */
   pptxTemplate?: Maybe<Template>;
   pptxTemplateId?: Maybe<Scalars['bigint']['output']>;
@@ -22565,6 +22818,26 @@ export type Report = {
   title: Scalars['String']['output'];
   /** An object relationship */
   user?: Maybe<User>;
+};
+
+
+/** columns and relationships of "reporting_report" */
+export type ReportEvidenceArgs = {
+  distinct_on?: InputMaybe<Array<Evidence_Select_Column>>;
+  limit?: InputMaybe<Scalars['Int']['input']>;
+  offset?: InputMaybe<Scalars['Int']['input']>;
+  order_by?: InputMaybe<Array<Evidence_Order_By>>;
+  where?: InputMaybe<Evidence_Bool_Exp>;
+};
+
+
+/** columns and relationships of "reporting_report" */
+export type ReportEvidence_AggregateArgs = {
+  distinct_on?: InputMaybe<Array<Evidence_Select_Column>>;
+  limit?: InputMaybe<Scalars['Int']['input']>;
+  offset?: InputMaybe<Scalars['Int']['input']>;
+  order_by?: InputMaybe<Array<Evidence_Order_By>>;
+  where?: InputMaybe<Evidence_Bool_Exp>;
 };
 
 
@@ -22591,6 +22864,26 @@ export type ReportFindings_AggregateArgs = {
   offset?: InputMaybe<Scalars['Int']['input']>;
   order_by?: InputMaybe<Array<ReportedFinding_Order_By>>;
   where?: InputMaybe<ReportedFinding_Bool_Exp>;
+};
+
+
+/** columns and relationships of "reporting_report" */
+export type ReportObservationsArgs = {
+  distinct_on?: InputMaybe<Array<Reporting_Reportobservationlink_Select_Column>>;
+  limit?: InputMaybe<Scalars['Int']['input']>;
+  offset?: InputMaybe<Scalars['Int']['input']>;
+  order_by?: InputMaybe<Array<Reporting_Reportobservationlink_Order_By>>;
+  where?: InputMaybe<Reporting_Reportobservationlink_Bool_Exp>;
+};
+
+
+/** columns and relationships of "reporting_report" */
+export type ReportObservations_AggregateArgs = {
+  distinct_on?: InputMaybe<Array<Reporting_Reportobservationlink_Select_Column>>;
+  limit?: InputMaybe<Scalars['Int']['input']>;
+  offset?: InputMaybe<Scalars['Int']['input']>;
+  order_by?: InputMaybe<Array<Reporting_Reportobservationlink_Order_By>>;
+  where?: InputMaybe<Reporting_Reportobservationlink_Bool_Exp>;
 };
 
 /** columns and relationships of "commandcenter_reportconfiguration" */
@@ -23302,11 +23595,15 @@ export type Report_Bool_Exp = {
   delivered?: InputMaybe<Boolean_Comparison_Exp>;
   docxTemplate?: InputMaybe<Template_Bool_Exp>;
   docxTemplateId?: InputMaybe<Bigint_Comparison_Exp>;
+  evidence?: InputMaybe<Evidence_Bool_Exp>;
+  evidence_aggregate?: InputMaybe<Evidence_Aggregate_Bool_Exp>;
   extraFields?: InputMaybe<Jsonb_Comparison_Exp>;
   findings?: InputMaybe<ReportedFinding_Bool_Exp>;
   findings_aggregate?: InputMaybe<ReportedFinding_Aggregate_Bool_Exp>;
   id?: InputMaybe<Bigint_Comparison_Exp>;
   last_update?: InputMaybe<Date_Comparison_Exp>;
+  observations?: InputMaybe<Reporting_Reportobservationlink_Bool_Exp>;
+  observations_aggregate?: InputMaybe<Reporting_Reportobservationlink_Aggregate_Bool_Exp>;
   pptxTemplate?: InputMaybe<Template_Bool_Exp>;
   pptxTemplateId?: InputMaybe<Bigint_Comparison_Exp>;
   project?: InputMaybe<Project_Bool_Exp>;
@@ -23354,10 +23651,12 @@ export type Report_Insert_Input = {
   delivered?: InputMaybe<Scalars['Boolean']['input']>;
   docxTemplate?: InputMaybe<Template_Obj_Rel_Insert_Input>;
   docxTemplateId?: InputMaybe<Scalars['bigint']['input']>;
+  evidence?: InputMaybe<Evidence_Arr_Rel_Insert_Input>;
   extraFields?: InputMaybe<Scalars['jsonb']['input']>;
   findings?: InputMaybe<ReportedFinding_Arr_Rel_Insert_Input>;
   id?: InputMaybe<Scalars['bigint']['input']>;
   last_update?: InputMaybe<Scalars['date']['input']>;
+  observations?: InputMaybe<Reporting_Reportobservationlink_Arr_Rel_Insert_Input>;
   pptxTemplate?: InputMaybe<Template_Obj_Rel_Insert_Input>;
   pptxTemplateId?: InputMaybe<Scalars['bigint']['input']>;
   project?: InputMaybe<Project_Obj_Rel_Insert_Input>;
@@ -23448,10 +23747,12 @@ export type Report_Order_By = {
   delivered?: InputMaybe<Order_By>;
   docxTemplate?: InputMaybe<Template_Order_By>;
   docxTemplateId?: InputMaybe<Order_By>;
+  evidence_aggregate?: InputMaybe<Evidence_Aggregate_Order_By>;
   extraFields?: InputMaybe<Order_By>;
   findings_aggregate?: InputMaybe<ReportedFinding_Aggregate_Order_By>;
   id?: InputMaybe<Order_By>;
   last_update?: InputMaybe<Order_By>;
+  observations_aggregate?: InputMaybe<Reporting_Reportobservationlink_Aggregate_Order_By>;
   pptxTemplate?: InputMaybe<Template_Order_By>;
   pptxTemplateId?: InputMaybe<Order_By>;
   project?: InputMaybe<Project_Order_By>;
@@ -25312,6 +25613,33 @@ export type Reporting_Reportobservationlink_Aggregate = {
   nodes: Array<Reporting_Reportobservationlink>;
 };
 
+export type Reporting_Reportobservationlink_Aggregate_Bool_Exp = {
+  bool_and?: InputMaybe<Reporting_Reportobservationlink_Aggregate_Bool_Exp_Bool_And>;
+  bool_or?: InputMaybe<Reporting_Reportobservationlink_Aggregate_Bool_Exp_Bool_Or>;
+  count?: InputMaybe<Reporting_Reportobservationlink_Aggregate_Bool_Exp_Count>;
+};
+
+export type Reporting_Reportobservationlink_Aggregate_Bool_Exp_Bool_And = {
+  arguments: Reporting_Reportobservationlink_Select_Column_Reporting_Reportobservationlink_Aggregate_Bool_Exp_Bool_And_Arguments_Columns;
+  distinct?: InputMaybe<Scalars['Boolean']['input']>;
+  filter?: InputMaybe<Reporting_Reportobservationlink_Bool_Exp>;
+  predicate: Boolean_Comparison_Exp;
+};
+
+export type Reporting_Reportobservationlink_Aggregate_Bool_Exp_Bool_Or = {
+  arguments: Reporting_Reportobservationlink_Select_Column_Reporting_Reportobservationlink_Aggregate_Bool_Exp_Bool_Or_Arguments_Columns;
+  distinct?: InputMaybe<Scalars['Boolean']['input']>;
+  filter?: InputMaybe<Reporting_Reportobservationlink_Bool_Exp>;
+  predicate: Boolean_Comparison_Exp;
+};
+
+export type Reporting_Reportobservationlink_Aggregate_Bool_Exp_Count = {
+  arguments?: InputMaybe<Array<Reporting_Reportobservationlink_Select_Column>>;
+  distinct?: InputMaybe<Scalars['Boolean']['input']>;
+  filter?: InputMaybe<Reporting_Reportobservationlink_Bool_Exp>;
+  predicate: Int_Comparison_Exp;
+};
+
 /** aggregate fields of "reporting_reportobservationlink" */
 export type Reporting_Reportobservationlink_Aggregate_Fields = {
   __typename?: 'reporting_reportobservationlink_aggregate_fields';
@@ -25335,9 +25663,31 @@ export type Reporting_Reportobservationlink_Aggregate_FieldsCountArgs = {
   distinct?: InputMaybe<Scalars['Boolean']['input']>;
 };
 
+/** order by aggregate values of table "reporting_reportobservationlink" */
+export type Reporting_Reportobservationlink_Aggregate_Order_By = {
+  avg?: InputMaybe<Reporting_Reportobservationlink_Avg_Order_By>;
+  count?: InputMaybe<Order_By>;
+  max?: InputMaybe<Reporting_Reportobservationlink_Max_Order_By>;
+  min?: InputMaybe<Reporting_Reportobservationlink_Min_Order_By>;
+  stddev?: InputMaybe<Reporting_Reportobservationlink_Stddev_Order_By>;
+  stddev_pop?: InputMaybe<Reporting_Reportobservationlink_Stddev_Pop_Order_By>;
+  stddev_samp?: InputMaybe<Reporting_Reportobservationlink_Stddev_Samp_Order_By>;
+  sum?: InputMaybe<Reporting_Reportobservationlink_Sum_Order_By>;
+  var_pop?: InputMaybe<Reporting_Reportobservationlink_Var_Pop_Order_By>;
+  var_samp?: InputMaybe<Reporting_Reportobservationlink_Var_Samp_Order_By>;
+  variance?: InputMaybe<Reporting_Reportobservationlink_Variance_Order_By>;
+};
+
 /** append existing jsonb value of filtered columns with new jsonb value */
 export type Reporting_Reportobservationlink_Append_Input = {
   extraFields?: InputMaybe<Scalars['jsonb']['input']>;
+};
+
+/** input type for inserting array relation for remote table "reporting_reportobservationlink" */
+export type Reporting_Reportobservationlink_Arr_Rel_Insert_Input = {
+  data: Array<Reporting_Reportobservationlink_Insert_Input>;
+  /** upsert condition */
+  on_conflict?: InputMaybe<Reporting_Reportobservationlink_On_Conflict>;
 };
 
 /** aggregate avg on columns */
@@ -25347,6 +25697,14 @@ export type Reporting_Reportobservationlink_Avg_Fields = {
   id?: Maybe<Scalars['Float']['output']>;
   position?: Maybe<Scalars['Float']['output']>;
   report_id?: Maybe<Scalars['Float']['output']>;
+};
+
+/** order by avg() on columns of table "reporting_reportobservationlink" */
+export type Reporting_Reportobservationlink_Avg_Order_By = {
+  assigned_to_id?: InputMaybe<Order_By>;
+  id?: InputMaybe<Order_By>;
+  position?: InputMaybe<Order_By>;
+  report_id?: InputMaybe<Order_By>;
 };
 
 /** Boolean expression to filter rows from the table "reporting_reportobservationlink". All fields are combined with a logical 'AND'. */
@@ -25420,6 +25778,16 @@ export type Reporting_Reportobservationlink_Max_Fields = {
   title?: Maybe<Scalars['String']['output']>;
 };
 
+/** order by max() on columns of table "reporting_reportobservationlink" */
+export type Reporting_Reportobservationlink_Max_Order_By = {
+  assigned_to_id?: InputMaybe<Order_By>;
+  description?: InputMaybe<Order_By>;
+  id?: InputMaybe<Order_By>;
+  position?: InputMaybe<Order_By>;
+  report_id?: InputMaybe<Order_By>;
+  title?: InputMaybe<Order_By>;
+};
+
 /** aggregate min on columns */
 export type Reporting_Reportobservationlink_Min_Fields = {
   __typename?: 'reporting_reportobservationlink_min_fields';
@@ -25429,6 +25797,16 @@ export type Reporting_Reportobservationlink_Min_Fields = {
   position?: Maybe<Scalars['Int']['output']>;
   report_id?: Maybe<Scalars['bigint']['output']>;
   title?: Maybe<Scalars['String']['output']>;
+};
+
+/** order by min() on columns of table "reporting_reportobservationlink" */
+export type Reporting_Reportobservationlink_Min_Order_By = {
+  assigned_to_id?: InputMaybe<Order_By>;
+  description?: InputMaybe<Order_By>;
+  id?: InputMaybe<Order_By>;
+  position?: InputMaybe<Order_By>;
+  report_id?: InputMaybe<Order_By>;
+  title?: InputMaybe<Order_By>;
 };
 
 /** response of any mutation on the table "reporting_reportobservationlink" */
@@ -25491,6 +25869,18 @@ export enum Reporting_Reportobservationlink_Select_Column {
   Title = 'title'
 }
 
+/** select "reporting_reportobservationlink_aggregate_bool_exp_bool_and_arguments_columns" columns of table "reporting_reportobservationlink" */
+export enum Reporting_Reportobservationlink_Select_Column_Reporting_Reportobservationlink_Aggregate_Bool_Exp_Bool_And_Arguments_Columns {
+  /** column name */
+  AddedAsBlank = 'added_as_blank'
+}
+
+/** select "reporting_reportobservationlink_aggregate_bool_exp_bool_or_arguments_columns" columns of table "reporting_reportobservationlink" */
+export enum Reporting_Reportobservationlink_Select_Column_Reporting_Reportobservationlink_Aggregate_Bool_Exp_Bool_Or_Arguments_Columns {
+  /** column name */
+  AddedAsBlank = 'added_as_blank'
+}
+
 /** input type for updating data in table "reporting_reportobservationlink" */
 export type Reporting_Reportobservationlink_Set_Input = {
   added_as_blank?: InputMaybe<Scalars['Boolean']['input']>;
@@ -25512,6 +25902,14 @@ export type Reporting_Reportobservationlink_Stddev_Fields = {
   report_id?: Maybe<Scalars['Float']['output']>;
 };
 
+/** order by stddev() on columns of table "reporting_reportobservationlink" */
+export type Reporting_Reportobservationlink_Stddev_Order_By = {
+  assigned_to_id?: InputMaybe<Order_By>;
+  id?: InputMaybe<Order_By>;
+  position?: InputMaybe<Order_By>;
+  report_id?: InputMaybe<Order_By>;
+};
+
 /** aggregate stddev_pop on columns */
 export type Reporting_Reportobservationlink_Stddev_Pop_Fields = {
   __typename?: 'reporting_reportobservationlink_stddev_pop_fields';
@@ -25521,6 +25919,14 @@ export type Reporting_Reportobservationlink_Stddev_Pop_Fields = {
   report_id?: Maybe<Scalars['Float']['output']>;
 };
 
+/** order by stddev_pop() on columns of table "reporting_reportobservationlink" */
+export type Reporting_Reportobservationlink_Stddev_Pop_Order_By = {
+  assigned_to_id?: InputMaybe<Order_By>;
+  id?: InputMaybe<Order_By>;
+  position?: InputMaybe<Order_By>;
+  report_id?: InputMaybe<Order_By>;
+};
+
 /** aggregate stddev_samp on columns */
 export type Reporting_Reportobservationlink_Stddev_Samp_Fields = {
   __typename?: 'reporting_reportobservationlink_stddev_samp_fields';
@@ -25528,6 +25934,14 @@ export type Reporting_Reportobservationlink_Stddev_Samp_Fields = {
   id?: Maybe<Scalars['Float']['output']>;
   position?: Maybe<Scalars['Float']['output']>;
   report_id?: Maybe<Scalars['Float']['output']>;
+};
+
+/** order by stddev_samp() on columns of table "reporting_reportobservationlink" */
+export type Reporting_Reportobservationlink_Stddev_Samp_Order_By = {
+  assigned_to_id?: InputMaybe<Order_By>;
+  id?: InputMaybe<Order_By>;
+  position?: InputMaybe<Order_By>;
+  report_id?: InputMaybe<Order_By>;
 };
 
 /** Streaming cursor of the table "reporting_reportobservationlink" */
@@ -25557,6 +25971,14 @@ export type Reporting_Reportobservationlink_Sum_Fields = {
   id?: Maybe<Scalars['bigint']['output']>;
   position?: Maybe<Scalars['Int']['output']>;
   report_id?: Maybe<Scalars['bigint']['output']>;
+};
+
+/** order by sum() on columns of table "reporting_reportobservationlink" */
+export type Reporting_Reportobservationlink_Sum_Order_By = {
+  assigned_to_id?: InputMaybe<Order_By>;
+  id?: InputMaybe<Order_By>;
+  position?: InputMaybe<Order_By>;
+  report_id?: InputMaybe<Order_By>;
 };
 
 /** update columns of table "reporting_reportobservationlink" */
@@ -25607,6 +26029,14 @@ export type Reporting_Reportobservationlink_Var_Pop_Fields = {
   report_id?: Maybe<Scalars['Float']['output']>;
 };
 
+/** order by var_pop() on columns of table "reporting_reportobservationlink" */
+export type Reporting_Reportobservationlink_Var_Pop_Order_By = {
+  assigned_to_id?: InputMaybe<Order_By>;
+  id?: InputMaybe<Order_By>;
+  position?: InputMaybe<Order_By>;
+  report_id?: InputMaybe<Order_By>;
+};
+
 /** aggregate var_samp on columns */
 export type Reporting_Reportobservationlink_Var_Samp_Fields = {
   __typename?: 'reporting_reportobservationlink_var_samp_fields';
@@ -25616,6 +26046,14 @@ export type Reporting_Reportobservationlink_Var_Samp_Fields = {
   report_id?: Maybe<Scalars['Float']['output']>;
 };
 
+/** order by var_samp() on columns of table "reporting_reportobservationlink" */
+export type Reporting_Reportobservationlink_Var_Samp_Order_By = {
+  assigned_to_id?: InputMaybe<Order_By>;
+  id?: InputMaybe<Order_By>;
+  position?: InputMaybe<Order_By>;
+  report_id?: InputMaybe<Order_By>;
+};
+
 /** aggregate variance on columns */
 export type Reporting_Reportobservationlink_Variance_Fields = {
   __typename?: 'reporting_reportobservationlink_variance_fields';
@@ -25623,6 +26061,14 @@ export type Reporting_Reportobservationlink_Variance_Fields = {
   id?: Maybe<Scalars['Float']['output']>;
   position?: Maybe<Scalars['Float']['output']>;
   report_id?: Maybe<Scalars['Float']['output']>;
+};
+
+/** order by variance() on columns of table "reporting_reportobservationlink" */
+export type Reporting_Reportobservationlink_Variance_Order_By = {
+  assigned_to_id?: InputMaybe<Order_By>;
+  id?: InputMaybe<Order_By>;
+  position?: InputMaybe<Order_By>;
+  report_id?: InputMaybe<Order_By>;
 };
 
 /** columns and relationships of "rolodex_projectscope" */
@@ -28422,9 +28868,9 @@ export type Subscription_Root = {
   domain_by_pk?: Maybe<Domain>;
   /** fetch data from the table in a streaming manner: "shepherd_domain" */
   domain_stream: Array<Domain>;
-  /** fetch data from the table: "reporting_evidence" */
+  /** An array relationship */
   evidence: Array<Evidence>;
-  /** fetch aggregated fields from the table: "reporting_evidence" */
+  /** An aggregate relationship */
   evidence_aggregate: Evidence_Aggregate;
   /** fetch data from the table: "reporting_evidence" using primary key columns */
   evidence_by_pk?: Maybe<Evidence>;
@@ -33092,6 +33538,10 @@ export type User = {
   /** An aggregate relationship */
   reportedFindings_aggregate: ReportedFinding_Aggregate;
   /** An array relationship */
+  reportedObservations: Array<Reporting_Reportobservationlink>;
+  /** An aggregate relationship */
+  reportedObservations_aggregate: Reporting_Reportobservationlink_Aggregate;
+  /** An array relationship */
   reports: Array<Report>;
   /** An aggregate relationship */
   reports_aggregate: Report_Aggregate;
@@ -33431,6 +33881,26 @@ export type UserReportedFindings_AggregateArgs = {
   offset?: InputMaybe<Scalars['Int']['input']>;
   order_by?: InputMaybe<Array<ReportedFinding_Order_By>>;
   where?: InputMaybe<ReportedFinding_Bool_Exp>;
+};
+
+
+/** columns and relationships of "users_user" */
+export type UserReportedObservationsArgs = {
+  distinct_on?: InputMaybe<Array<Reporting_Reportobservationlink_Select_Column>>;
+  limit?: InputMaybe<Scalars['Int']['input']>;
+  offset?: InputMaybe<Scalars['Int']['input']>;
+  order_by?: InputMaybe<Array<Reporting_Reportobservationlink_Order_By>>;
+  where?: InputMaybe<Reporting_Reportobservationlink_Bool_Exp>;
+};
+
+
+/** columns and relationships of "users_user" */
+export type UserReportedObservations_AggregateArgs = {
+  distinct_on?: InputMaybe<Array<Reporting_Reportobservationlink_Select_Column>>;
+  limit?: InputMaybe<Scalars['Int']['input']>;
+  offset?: InputMaybe<Scalars['Int']['input']>;
+  order_by?: InputMaybe<Array<Reporting_Reportobservationlink_Order_By>>;
+  where?: InputMaybe<Reporting_Reportobservationlink_Bool_Exp>;
 };
 
 
@@ -34519,6 +34989,8 @@ export type User_Bool_Exp = {
   reportedFindingNotes_aggregate?: InputMaybe<ReportedFindingNote_Aggregate_Bool_Exp>;
   reportedFindings?: InputMaybe<ReportedFinding_Bool_Exp>;
   reportedFindings_aggregate?: InputMaybe<ReportedFinding_Aggregate_Bool_Exp>;
+  reportedObservations?: InputMaybe<Reporting_Reportobservationlink_Bool_Exp>;
+  reportedObservations_aggregate?: InputMaybe<Reporting_Reportobservationlink_Aggregate_Bool_Exp>;
   reports?: InputMaybe<Report_Bool_Exp>;
   reports_aggregate?: InputMaybe<Report_Aggregate_Bool_Exp>;
   require_2fa?: InputMaybe<Boolean_Comparison_Exp>;
@@ -34581,6 +35053,7 @@ export type User_Insert_Input = {
   reportTemplates?: InputMaybe<Template_Arr_Rel_Insert_Input>;
   reportedFindingNotes?: InputMaybe<ReportedFindingNote_Arr_Rel_Insert_Input>;
   reportedFindings?: InputMaybe<ReportedFinding_Arr_Rel_Insert_Input>;
+  reportedObservations?: InputMaybe<Reporting_Reportobservationlink_Arr_Rel_Insert_Input>;
   reports?: InputMaybe<Report_Arr_Rel_Insert_Input>;
   require_2fa?: InputMaybe<Scalars['Boolean']['input']>;
   role?: InputMaybe<Scalars['String']['input']>;
@@ -34679,6 +35152,7 @@ export type User_Order_By = {
   reportTemplates_aggregate?: InputMaybe<Template_Aggregate_Order_By>;
   reportedFindingNotes_aggregate?: InputMaybe<ReportedFindingNote_Aggregate_Order_By>;
   reportedFindings_aggregate?: InputMaybe<ReportedFinding_Aggregate_Order_By>;
+  reportedObservations_aggregate?: InputMaybe<Reporting_Reportobservationlink_Aggregate_Order_By>;
   reports_aggregate?: InputMaybe<Report_Aggregate_Order_By>;
   require_2fa?: InputMaybe<Order_By>;
   role?: InputMaybe<Order_By>;
@@ -35503,6 +35977,21 @@ export type Set_ObservationMutationVariables = Exact<{
 
 export type Set_ObservationMutation = { __typename?: 'mutation_root', update_reporting_observation_by_pk?: { __typename?: 'reporting_observation', id: any } | null, setTags: { __typename?: 'TagsResult', tags: Array<string> } };
 
+export type Get_Project_NoteQueryVariables = Exact<{
+  id: Scalars['bigint']['input'];
+}>;
+
+
+export type Get_Project_NoteQuery = { __typename?: 'query_root', projectNote_by_pk?: { __typename?: 'projectNote', note: string } | null };
+
+export type Set_Project_NoteMutationVariables = Exact<{
+  id: Scalars['bigint']['input'];
+  note: Scalars['String']['input'];
+}>;
+
+
+export type Set_Project_NoteMutation = { __typename?: 'mutation_root', update_projectNote_by_pk?: { __typename?: 'projectNote', id: any } | null };
+
 export type Get_ReportQueryVariables = Exact<{
   id: Scalars['bigint']['input'];
 }>;
@@ -35510,13 +35999,13 @@ export type Get_ReportQueryVariables = Exact<{
 
 export type Get_ReportQuery = { __typename?: 'query_root', report_by_pk?: { __typename?: 'report', extraFields: any } | null, extraFieldSpec: Array<{ __typename?: 'extraFieldSpec', internalName: string, type: string }> };
 
-export type EviMutationVariables = Exact<{
+export type Set_ReportMutationVariables = Exact<{
   id: Scalars['bigint']['input'];
   extraFields: Scalars['jsonb']['input'];
 }>;
 
 
-export type EviMutation = { __typename?: 'mutation_root', update_report_by_pk?: { __typename?: 'report', id: any } | null };
+export type Set_ReportMutation = { __typename?: 'mutation_root', update_report_by_pk?: { __typename?: 'report', id: any } | null };
 
 export type Get_Report_Finding_LinkQueryVariables = Exact<{
   id: Scalars['bigint']['input'];
@@ -35574,8 +36063,10 @@ export const Get_FindingDocument = {"kind":"Document","definitions":[{"kind":"Op
 export const Set_FindingDocument = {"kind":"Document","definitions":[{"kind":"OperationDefinition","operation":"mutation","name":{"kind":"Name","value":"SET_FINDING"},"variableDefinitions":[{"kind":"VariableDefinition","variable":{"kind":"Variable","name":{"kind":"Name","value":"id"}},"type":{"kind":"NonNullType","type":{"kind":"NamedType","name":{"kind":"Name","value":"bigint"}}}},{"kind":"VariableDefinition","variable":{"kind":"Variable","name":{"kind":"Name","value":"set"}},"type":{"kind":"NonNullType","type":{"kind":"NamedType","name":{"kind":"Name","value":"finding_set_input"}}}},{"kind":"VariableDefinition","variable":{"kind":"Variable","name":{"kind":"Name","value":"tags"}},"type":{"kind":"NonNullType","type":{"kind":"ListType","type":{"kind":"NonNullType","type":{"kind":"NamedType","name":{"kind":"Name","value":"String"}}}}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"update_finding_by_pk"},"arguments":[{"kind":"Argument","name":{"kind":"Name","value":"pk_columns"},"value":{"kind":"ObjectValue","fields":[{"kind":"ObjectField","name":{"kind":"Name","value":"id"},"value":{"kind":"Variable","name":{"kind":"Name","value":"id"}}}]}},{"kind":"Argument","name":{"kind":"Name","value":"_set"},"value":{"kind":"Variable","name":{"kind":"Name","value":"set"}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"id"}}]}},{"kind":"Field","name":{"kind":"Name","value":"setTags"},"arguments":[{"kind":"Argument","name":{"kind":"Name","value":"model"},"value":{"kind":"StringValue","value":"finding","block":false}},{"kind":"Argument","name":{"kind":"Name","value":"id"},"value":{"kind":"Variable","name":{"kind":"Name","value":"id"}}},{"kind":"Argument","name":{"kind":"Name","value":"tags"},"value":{"kind":"Variable","name":{"kind":"Name","value":"tags"}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"tags"}}]}}]}}]} as unknown as DocumentNode<Set_FindingMutation, Set_FindingMutationVariables>;
 export const Get_ObservationDocument = {"kind":"Document","definitions":[{"kind":"OperationDefinition","operation":"query","name":{"kind":"Name","value":"GET_OBSERVATION"},"variableDefinitions":[{"kind":"VariableDefinition","variable":{"kind":"Variable","name":{"kind":"Name","value":"id"}},"type":{"kind":"NonNullType","type":{"kind":"NamedType","name":{"kind":"Name","value":"bigint"}}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"reporting_observation_by_pk"},"arguments":[{"kind":"Argument","name":{"kind":"Name","value":"id"},"value":{"kind":"Variable","name":{"kind":"Name","value":"id"}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"title"}},{"kind":"Field","name":{"kind":"Name","value":"description"}},{"kind":"Field","name":{"kind":"Name","value":"extraFields"}}]}},{"kind":"Field","name":{"kind":"Name","value":"tags"},"arguments":[{"kind":"Argument","name":{"kind":"Name","value":"model"},"value":{"kind":"StringValue","value":"observation","block":false}},{"kind":"Argument","name":{"kind":"Name","value":"id"},"value":{"kind":"Variable","name":{"kind":"Name","value":"id"}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"tags"}}]}},{"kind":"Field","name":{"kind":"Name","value":"extraFieldSpec"},"arguments":[{"kind":"Argument","name":{"kind":"Name","value":"where"},"value":{"kind":"ObjectValue","fields":[{"kind":"ObjectField","name":{"kind":"Name","value":"targetModel"},"value":{"kind":"ObjectValue","fields":[{"kind":"ObjectField","name":{"kind":"Name","value":"_eq"},"value":{"kind":"StringValue","value":"reporting.Observation","block":false}}]}}]}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"internalName"}},{"kind":"Field","name":{"kind":"Name","value":"type"}}]}}]}}]} as unknown as DocumentNode<Get_ObservationQuery, Get_ObservationQueryVariables>;
 export const Set_ObservationDocument = {"kind":"Document","definitions":[{"kind":"OperationDefinition","operation":"mutation","name":{"kind":"Name","value":"SET_OBSERVATION"},"variableDefinitions":[{"kind":"VariableDefinition","variable":{"kind":"Variable","name":{"kind":"Name","value":"id"}},"type":{"kind":"NonNullType","type":{"kind":"NamedType","name":{"kind":"Name","value":"bigint"}}}},{"kind":"VariableDefinition","variable":{"kind":"Variable","name":{"kind":"Name","value":"title"}},"type":{"kind":"NonNullType","type":{"kind":"NamedType","name":{"kind":"Name","value":"String"}}}},{"kind":"VariableDefinition","variable":{"kind":"Variable","name":{"kind":"Name","value":"description"}},"type":{"kind":"NonNullType","type":{"kind":"NamedType","name":{"kind":"Name","value":"String"}}}},{"kind":"VariableDefinition","variable":{"kind":"Variable","name":{"kind":"Name","value":"tags"}},"type":{"kind":"NonNullType","type":{"kind":"ListType","type":{"kind":"NonNullType","type":{"kind":"NamedType","name":{"kind":"Name","value":"String"}}}}}},{"kind":"VariableDefinition","variable":{"kind":"Variable","name":{"kind":"Name","value":"extraFields"}},"type":{"kind":"NonNullType","type":{"kind":"NamedType","name":{"kind":"Name","value":"jsonb"}}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"update_reporting_observation_by_pk"},"arguments":[{"kind":"Argument","name":{"kind":"Name","value":"pk_columns"},"value":{"kind":"ObjectValue","fields":[{"kind":"ObjectField","name":{"kind":"Name","value":"id"},"value":{"kind":"Variable","name":{"kind":"Name","value":"id"}}}]}},{"kind":"Argument","name":{"kind":"Name","value":"_set"},"value":{"kind":"ObjectValue","fields":[{"kind":"ObjectField","name":{"kind":"Name","value":"title"},"value":{"kind":"Variable","name":{"kind":"Name","value":"title"}}},{"kind":"ObjectField","name":{"kind":"Name","value":"description"},"value":{"kind":"Variable","name":{"kind":"Name","value":"description"}}},{"kind":"ObjectField","name":{"kind":"Name","value":"extraFields"},"value":{"kind":"Variable","name":{"kind":"Name","value":"extraFields"}}}]}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"id"}}]}},{"kind":"Field","name":{"kind":"Name","value":"setTags"},"arguments":[{"kind":"Argument","name":{"kind":"Name","value":"model"},"value":{"kind":"StringValue","value":"observation","block":false}},{"kind":"Argument","name":{"kind":"Name","value":"id"},"value":{"kind":"Variable","name":{"kind":"Name","value":"id"}}},{"kind":"Argument","name":{"kind":"Name","value":"tags"},"value":{"kind":"Variable","name":{"kind":"Name","value":"tags"}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"tags"}}]}}]}}]} as unknown as DocumentNode<Set_ObservationMutation, Set_ObservationMutationVariables>;
+export const Get_Project_NoteDocument = {"kind":"Document","definitions":[{"kind":"OperationDefinition","operation":"query","name":{"kind":"Name","value":"GET_PROJECT_NOTE"},"variableDefinitions":[{"kind":"VariableDefinition","variable":{"kind":"Variable","name":{"kind":"Name","value":"id"}},"type":{"kind":"NonNullType","type":{"kind":"NamedType","name":{"kind":"Name","value":"bigint"}}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"projectNote_by_pk"},"arguments":[{"kind":"Argument","name":{"kind":"Name","value":"id"},"value":{"kind":"Variable","name":{"kind":"Name","value":"id"}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"note"}}]}}]}}]} as unknown as DocumentNode<Get_Project_NoteQuery, Get_Project_NoteQueryVariables>;
+export const Set_Project_NoteDocument = {"kind":"Document","definitions":[{"kind":"OperationDefinition","operation":"mutation","name":{"kind":"Name","value":"SET_PROJECT_NOTE"},"variableDefinitions":[{"kind":"VariableDefinition","variable":{"kind":"Variable","name":{"kind":"Name","value":"id"}},"type":{"kind":"NonNullType","type":{"kind":"NamedType","name":{"kind":"Name","value":"bigint"}}}},{"kind":"VariableDefinition","variable":{"kind":"Variable","name":{"kind":"Name","value":"note"}},"type":{"kind":"NonNullType","type":{"kind":"NamedType","name":{"kind":"Name","value":"String"}}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"update_projectNote_by_pk"},"arguments":[{"kind":"Argument","name":{"kind":"Name","value":"pk_columns"},"value":{"kind":"ObjectValue","fields":[{"kind":"ObjectField","name":{"kind":"Name","value":"id"},"value":{"kind":"Variable","name":{"kind":"Name","value":"id"}}}]}},{"kind":"Argument","name":{"kind":"Name","value":"_set"},"value":{"kind":"ObjectValue","fields":[{"kind":"ObjectField","name":{"kind":"Name","value":"note"},"value":{"kind":"Variable","name":{"kind":"Name","value":"note"}}}]}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"id"}}]}}]}}]} as unknown as DocumentNode<Set_Project_NoteMutation, Set_Project_NoteMutationVariables>;
 export const Get_ReportDocument = {"kind":"Document","definitions":[{"kind":"OperationDefinition","operation":"query","name":{"kind":"Name","value":"GET_REPORT"},"variableDefinitions":[{"kind":"VariableDefinition","variable":{"kind":"Variable","name":{"kind":"Name","value":"id"}},"type":{"kind":"NonNullType","type":{"kind":"NamedType","name":{"kind":"Name","value":"bigint"}}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"report_by_pk"},"arguments":[{"kind":"Argument","name":{"kind":"Name","value":"id"},"value":{"kind":"Variable","name":{"kind":"Name","value":"id"}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"extraFields"}}]}},{"kind":"Field","name":{"kind":"Name","value":"extraFieldSpec"},"arguments":[{"kind":"Argument","name":{"kind":"Name","value":"where"},"value":{"kind":"ObjectValue","fields":[{"kind":"ObjectField","name":{"kind":"Name","value":"targetModel"},"value":{"kind":"ObjectValue","fields":[{"kind":"ObjectField","name":{"kind":"Name","value":"_eq"},"value":{"kind":"StringValue","value":"reporting.Report","block":false}}]}}]}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"internalName"}},{"kind":"Field","name":{"kind":"Name","value":"type"}}]}}]}}]} as unknown as DocumentNode<Get_ReportQuery, Get_ReportQueryVariables>;
-export const EviDocument = {"kind":"Document","definitions":[{"kind":"OperationDefinition","operation":"mutation","name":{"kind":"Name","value":"evi"},"variableDefinitions":[{"kind":"VariableDefinition","variable":{"kind":"Variable","name":{"kind":"Name","value":"id"}},"type":{"kind":"NonNullType","type":{"kind":"NamedType","name":{"kind":"Name","value":"bigint"}}}},{"kind":"VariableDefinition","variable":{"kind":"Variable","name":{"kind":"Name","value":"extraFields"}},"type":{"kind":"NonNullType","type":{"kind":"NamedType","name":{"kind":"Name","value":"jsonb"}}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"update_report_by_pk"},"arguments":[{"kind":"Argument","name":{"kind":"Name","value":"pk_columns"},"value":{"kind":"ObjectValue","fields":[{"kind":"ObjectField","name":{"kind":"Name","value":"id"},"value":{"kind":"Variable","name":{"kind":"Name","value":"id"}}}]}},{"kind":"Argument","name":{"kind":"Name","value":"_set"},"value":{"kind":"ObjectValue","fields":[{"kind":"ObjectField","name":{"kind":"Name","value":"extraFields"},"value":{"kind":"Variable","name":{"kind":"Name","value":"extraFields"}}}]}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"id"}}]}}]}}]} as unknown as DocumentNode<EviMutation, EviMutationVariables>;
+export const Set_ReportDocument = {"kind":"Document","definitions":[{"kind":"OperationDefinition","operation":"mutation","name":{"kind":"Name","value":"SET_REPORT"},"variableDefinitions":[{"kind":"VariableDefinition","variable":{"kind":"Variable","name":{"kind":"Name","value":"id"}},"type":{"kind":"NonNullType","type":{"kind":"NamedType","name":{"kind":"Name","value":"bigint"}}}},{"kind":"VariableDefinition","variable":{"kind":"Variable","name":{"kind":"Name","value":"extraFields"}},"type":{"kind":"NonNullType","type":{"kind":"NamedType","name":{"kind":"Name","value":"jsonb"}}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"update_report_by_pk"},"arguments":[{"kind":"Argument","name":{"kind":"Name","value":"pk_columns"},"value":{"kind":"ObjectValue","fields":[{"kind":"ObjectField","name":{"kind":"Name","value":"id"},"value":{"kind":"Variable","name":{"kind":"Name","value":"id"}}}]}},{"kind":"Argument","name":{"kind":"Name","value":"_set"},"value":{"kind":"ObjectValue","fields":[{"kind":"ObjectField","name":{"kind":"Name","value":"extraFields"},"value":{"kind":"Variable","name":{"kind":"Name","value":"extraFields"}}}]}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"id"}}]}}]}}]} as unknown as DocumentNode<Set_ReportMutation, Set_ReportMutationVariables>;
 export const Get_Report_Finding_LinkDocument = {"kind":"Document","definitions":[{"kind":"OperationDefinition","operation":"query","name":{"kind":"Name","value":"GET_REPORT_FINDING_LINK"},"variableDefinitions":[{"kind":"VariableDefinition","variable":{"kind":"Variable","name":{"kind":"Name","value":"id"}},"type":{"kind":"NonNullType","type":{"kind":"NamedType","name":{"kind":"Name","value":"bigint"}}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"reportedFinding_by_pk"},"arguments":[{"kind":"Argument","name":{"kind":"Name","value":"id"},"value":{"kind":"Variable","name":{"kind":"Name","value":"id"}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"title"}},{"kind":"Field","name":{"kind":"Name","value":"description"}},{"kind":"Field","name":{"kind":"Name","value":"impact"}},{"kind":"Field","name":{"kind":"Name","value":"mitigation"}},{"kind":"Field","name":{"kind":"Name","value":"replication_steps"}},{"kind":"Field","name":{"kind":"Name","value":"hostDetectionTechniques"}},{"kind":"Field","name":{"kind":"Name","value":"networkDetectionTechniques"}},{"kind":"Field","name":{"kind":"Name","value":"references"}},{"kind":"Field","name":{"kind":"Name","value":"findingGuidance"}},{"kind":"Field","name":{"kind":"Name","value":"cvssScore"}},{"kind":"Field","name":{"kind":"Name","value":"cvssVector"}},{"kind":"Field","name":{"kind":"Name","value":"severity"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"id"}}]}},{"kind":"Field","name":{"kind":"Name","value":"findingTypeId"}},{"kind":"Field","name":{"kind":"Name","value":"affectedEntities"}},{"kind":"Field","name":{"kind":"Name","value":"extraFields"}}]}},{"kind":"Field","name":{"kind":"Name","value":"tags"},"arguments":[{"kind":"Argument","name":{"kind":"Name","value":"model"},"value":{"kind":"StringValue","value":"report_finding_link","block":false}},{"kind":"Argument","name":{"kind":"Name","value":"id"},"value":{"kind":"Variable","name":{"kind":"Name","value":"id"}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"tags"}}]}},{"kind":"Field","name":{"kind":"Name","value":"extraFieldSpec"},"arguments":[{"kind":"Argument","name":{"kind":"Name","value":"where"},"value":{"kind":"ObjectValue","fields":[{"kind":"ObjectField","name":{"kind":"Name","value":"targetModel"},"value":{"kind":"ObjectValue","fields":[{"kind":"ObjectField","name":{"kind":"Name","value":"_eq"},"value":{"kind":"StringValue","value":"reporting.Finding","block":false}}]}}]}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"internalName"}},{"kind":"Field","name":{"kind":"Name","value":"type"}}]}}]}}]} as unknown as DocumentNode<Get_Report_Finding_LinkQuery, Get_Report_Finding_LinkQueryVariables>;
 export const Set_Report_Finding_LinkDocument = {"kind":"Document","definitions":[{"kind":"OperationDefinition","operation":"mutation","name":{"kind":"Name","value":"SET_REPORT_FINDING_LINK"},"variableDefinitions":[{"kind":"VariableDefinition","variable":{"kind":"Variable","name":{"kind":"Name","value":"id"}},"type":{"kind":"NonNullType","type":{"kind":"NamedType","name":{"kind":"Name","value":"bigint"}}}},{"kind":"VariableDefinition","variable":{"kind":"Variable","name":{"kind":"Name","value":"set"}},"type":{"kind":"NonNullType","type":{"kind":"NamedType","name":{"kind":"Name","value":"reportedFinding_set_input"}}}},{"kind":"VariableDefinition","variable":{"kind":"Variable","name":{"kind":"Name","value":"tags"}},"type":{"kind":"NonNullType","type":{"kind":"ListType","type":{"kind":"NonNullType","type":{"kind":"NamedType","name":{"kind":"Name","value":"String"}}}}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"update_reportedFinding_by_pk"},"arguments":[{"kind":"Argument","name":{"kind":"Name","value":"pk_columns"},"value":{"kind":"ObjectValue","fields":[{"kind":"ObjectField","name":{"kind":"Name","value":"id"},"value":{"kind":"Variable","name":{"kind":"Name","value":"id"}}}]}},{"kind":"Argument","name":{"kind":"Name","value":"_set"},"value":{"kind":"Variable","name":{"kind":"Name","value":"set"}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"id"}}]}},{"kind":"Field","name":{"kind":"Name","value":"setTags"},"arguments":[{"kind":"Argument","name":{"kind":"Name","value":"model"},"value":{"kind":"StringValue","value":"report_finding_link","block":false}},{"kind":"Argument","name":{"kind":"Name","value":"id"},"value":{"kind":"Variable","name":{"kind":"Name","value":"id"}}},{"kind":"Argument","name":{"kind":"Name","value":"tags"},"value":{"kind":"Variable","name":{"kind":"Name","value":"tags"}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"tags"}}]}}]}}]} as unknown as DocumentNode<Set_Report_Finding_LinkMutation, Set_Report_Finding_LinkMutationVariables>;
 export const Get_Report_Observation_LinkDocument = {"kind":"Document","definitions":[{"kind":"OperationDefinition","operation":"query","name":{"kind":"Name","value":"GET_REPORT_OBSERVATION_LINK"},"variableDefinitions":[{"kind":"VariableDefinition","variable":{"kind":"Variable","name":{"kind":"Name","value":"id"}},"type":{"kind":"NonNullType","type":{"kind":"NamedType","name":{"kind":"Name","value":"bigint"}}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"reporting_reportobservationlink_by_pk"},"arguments":[{"kind":"Argument","name":{"kind":"Name","value":"id"},"value":{"kind":"Variable","name":{"kind":"Name","value":"id"}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"title"}},{"kind":"Field","name":{"kind":"Name","value":"description"}},{"kind":"Field","name":{"kind":"Name","value":"extraFields"}}]}},{"kind":"Field","name":{"kind":"Name","value":"tags"},"arguments":[{"kind":"Argument","name":{"kind":"Name","value":"model"},"value":{"kind":"StringValue","value":"report_observation_link","block":false}},{"kind":"Argument","name":{"kind":"Name","value":"id"},"value":{"kind":"Variable","name":{"kind":"Name","value":"id"}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"tags"}}]}},{"kind":"Field","name":{"kind":"Name","value":"extraFieldSpec"},"arguments":[{"kind":"Argument","name":{"kind":"Name","value":"where"},"value":{"kind":"ObjectValue","fields":[{"kind":"ObjectField","name":{"kind":"Name","value":"targetModel"},"value":{"kind":"ObjectValue","fields":[{"kind":"ObjectField","name":{"kind":"Name","value":"_eq"},"value":{"kind":"StringValue","value":"reporting.Observation","block":false}}]}}]}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"internalName"}},{"kind":"Field","name":{"kind":"Name","value":"type"}}]}}]}}]} as unknown as DocumentNode<Get_Report_Observation_LinkQuery, Get_Report_Observation_LinkQueryVariables>;

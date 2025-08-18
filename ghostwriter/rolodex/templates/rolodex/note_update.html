@@ -1,0 +1,17 @@
+{% extends "collab_editing/update.html" %}
+
+{% load static %}
+
+{% block pagetitle %}Note Form{% endblock %}
+
+{% block breadcrumbs %}
+    <nav aria-label="breadcrumb">
+        <ul class="breadcrumb">
+            <li class="breadcrumb-item"><a href="{% url 'home:dashboard' %}">Dashboard</a></li>
+            <li class="breadcrumb-item"><a href="{% url 'rolodex:client_detail' pk=object.project.client.id %}">{{ object.project.client }}</a></li>
+            <li class="breadcrumb-item"><a href="{% url 'rolodex:project_detail' pk=object.project.id %}">{{ object.project }}</a></li>
+            <li class="breadcrumb-item"><a href="{% url 'rolodex:project_detail' pk=object.project.id %}#notes">Notes</a></li>
+            <li class="breadcrumb-item active" aria-current="page">Edit</li>
+        </ul>
+    </nav>
+{% endblock %}

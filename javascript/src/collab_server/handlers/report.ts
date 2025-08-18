@@ -14,7 +14,7 @@ const GET = gql(`
 `);
 
 const SET = gql(`
-    mutation evi($id: bigint!, $extraFields:jsonb!) {
+    mutation SET_REPORT($id: bigint!, $extraFields:jsonb!) {
         update_report_by_pk(pk_columns:{id:$id}, _set:{extraFields: $extraFields}) {
             id
         }

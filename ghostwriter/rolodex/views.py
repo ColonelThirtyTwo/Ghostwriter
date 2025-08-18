@@ -32,6 +32,7 @@ from ghostwriter.api.utils import (
     verify_user_is_privileged,
 )
 from ghostwriter.commandcenter.models import ExtraFieldSpec, ReportConfiguration
+from ghostwriter.commandcenter.views import CollabModelUpdate
 from ghostwriter.modules import codenames
 from ghostwriter.modules.model_utils import to_dict
 from ghostwriter.modules.reportwriter.base import ReportExportError
@@ -1985,98 +1986,32 @@ class ProjectComponentsUpdate(RoleBasedAccessControlMixin, UpdateView):
             return super().form_invalid(form)
 
 
-class ProjectNoteCreate(RoleBasedAccessControlMixin, CreateView):
-    """
-    Create an individual :model:`rolodex.ProjectNote`.
-
-    **Context**
-
-    ``note_object``
-        Instance of :model:`rolodex.Project` associated with note
-    ``cancel_link``
-        Link for the form's Cancel button to return to project's detail page
-
-    **Template**
-
-    :template:`ghostwriter/note_form.html`
-    """
-
-    model = ProjectNote
-    form_class = ProjectNoteForm
-    template_name = "note_form.html"
-
+class ProjectNoteCreate(RoleBasedAccessControlMixin, View):
     def test_func(self):
-        self.project_instance = get_object_or_404(Project, pk=self.kwargs.get("pk"))
-        return self.project_instance.user_can_edit(self.request.user)
+        project_instance = get_object_or_404(Project, pk=self.kwargs.get("pk"))
+        return ProjectNote.user_can_create(self.request.user, project_instance)
 
     def handle_no_permission(self):
         messages.error(self.request, "You do not have permission to access that.")
         return redirect("home:dashboard")
 
-    def get_success_url(self):
+    def post(self, request, pk) -> HttpResponse:
+        obj = ProjectNote(
+            operator=self.request.user,
+            project_id=pk,
+        )
+        obj.save()
         messages.success(
             self.request,
-            "Note successfully added to this project.",
+            "New note created",
             extra_tags="alert-success",
         )
-        return "{}#notes".format(reverse("rolodex:project_detail", kwargs={"pk": self.object.project.id}))
-
-    def get_initial(self):
-        return {"project": self.project_instance, "operator": self.request.user}
-
-    def get_context_data(self, **kwargs):
-        ctx = super().get_context_data(**kwargs)
-        ctx["note_object"] = self.project_instance
-        ctx["cancel_link"] = "{}#notes".format(
-            reverse("rolodex:project_detail", kwargs={"pk": self.project_instance.id})
-        )
-        return ctx
-
-    def form_valid(self, form, **kwargs):
-        obj = form.save(commit=False)
-        obj.operator = self.request.user
-        obj.project_id = self.kwargs.get("pk")
-        obj.save()
-        return super().form_valid(form)
+        return redirect("rolodex:project_note_edit", pk=obj.id)
 
 
-class ProjectNoteUpdate(RoleBasedAccessControlMixin, UpdateView):
-    """
-    Update an individual :model:`rolodex.ProjectNote`.
-
-    **Context**
-
-    ``note_object``
-        Instance of :model:`rolodex.Project` associated with note
-    ``cancel_link``
-        Link for the form's Cancel button to return to project's detail page
-
-    **Template**
-
-    :template:`ghostwriter/note_form.html`
-    """
-
+class ProjectNoteUpdate(CollabModelUpdate):
     model = ProjectNote
-    form_class = ProjectNoteForm
-    template_name = "note_form.html"
-
-    def test_func(self):
-        obj = self.get_object()
-        return obj.operator.id == self.request.user.id or verify_user_is_privileged(self.request.user)
-
-    def handle_no_permission(self):
-        messages.error(self.request, "You do not have permission to access that.")
-        return redirect(reverse("rolodex:project_detail", kwargs={"pk": self.get_object().project.pk}) + "#notes")
-
-    def get_success_url(self):
-        messages.success(self.request, "Note successfully updated.", extra_tags="alert-success")
-        return "{}#notes".format(reverse("rolodex:project_detail", kwargs={"pk": self.object.project.id}))
-
-    def get_context_data(self, **kwargs):
-        ctx = super().get_context_data(**kwargs)
-        ctx["note_object"] = self.object.project
-        ctx["cancel_link"] = "{}#notes".format(reverse("rolodex:project_detail", kwargs={"pk": self.object.project.id}))
-        return ctx
+    template_name = "rolodex/note_update.html"
 
 
 class DeconflictionCreate(RoleBasedAccessControlMixin, CreateView):

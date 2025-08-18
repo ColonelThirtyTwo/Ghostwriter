@@ -20,13 +20,15 @@ import ReportObservationLinkHandler from "./handlers/report_observation_link";
 import FindingHandler from "./handlers/finding";
 import ReportFindingLinkHandler from "./handlers/report_finding_link";
 import ReportHandler from "./handlers/report";
+import ProjectNoteHandler from "./handlers/projectnote";
 
 // Extend this with your model handlers. See how-to-collab.md.
 const HANDLERS: Map<string, ModelHandler> = new Map([
-    ["observation", ObservationHandler],
-    ["report_observation_link", ReportObservationLinkHandler],
     ["finding", FindingHandler],
+    ["observation", ObservationHandler],
+    ["projectnote", ProjectNoteHandler],
     ["report_finding_link", ReportFindingLinkHandler],
+    ["report_observation_link", ReportObservationLinkHandler],
     ["report", ReportHandler],
 ]);
 

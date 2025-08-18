@@ -1093,8 +1093,18 @@
         <h4>Project Notes</h4>
         <hr/>
 
-        <a class="icon add-icon btn btn-primary mb-3 col-3" href="{% url 'rolodex:project_note_add' project.id %}">Add a
-          Note</a>
+        <form
+          action="{% url 'rolodex:project_note_add' pk=project.id %}"
+          method="POST"
+          style="display: contents;"
+        >
+          {% csrf_token %}
+          <input
+            type="submit"
+            class="icon add-icon btn btn-primary mb-3 col-3"
+            value="Add a Note"
+          />
+        </form>
 
         {% if project.projectnote_set.all %}
           {% for note in project.projectnote_set.all reversed %}

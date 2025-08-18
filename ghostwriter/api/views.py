@@ -52,6 +52,7 @@ from ghostwriter.reporting.views2.report_finding_link import get_position
 from ghostwriter.rolodex.models import (
     Project,
     ProjectContact,
+    ProjectNote,
     ProjectObjective,
     ProjectSubTask,
 )
@@ -1287,6 +1288,7 @@ class CheckEditPermissions(JwtRequiredMixin, HasuraActionView):
         "finding": Finding,
         "report_finding_link": ReportFindingLink,
         "report": Report,
+        "projectnote": ProjectNote,
     }
 
     def post(self, request):
