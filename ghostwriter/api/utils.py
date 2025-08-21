@@ -18,7 +18,6 @@ from django.shortcuts import resolve_url
 import jwt
 
 # Ghostwriter Libraries
-from ghostwriter.oplog.models import Oplog
 from ghostwriter.reporting.models import Archive, Report, ReportTemplate
 from ghostwriter.rolodex.models import Client, Project
 
@@ -400,3 +399,42 @@ class RoleBasedAccessControlMixin(AccessMixin):
     def get_test_func(self):
         """Override this method to use a different ``test_func`` method."""
         return self.test_func
+
+
+class HasuraError(Exception):
+    """
+    When raised, returns a JSON error page to Hasura
+    """
+    def __init__(self, status, message, code):
+        super().__init__(message)
+        self.status = status
+        self.message = message
+        self.code = code
+
+    def to_response(self):
+        return JsonResponse(generate_hasura_error_payload(self.message, self.code), status=self.status)
+
+def check_token_get_user(encoded_token):
+    """
+    Gets the user authenticated by a token. Raises `HasuraError` if the token is invalid.
+    """
+    from ghostwriter.api.models import APIKey # noqa: circular import break
+
+    api_key = APIKey.objects.filter(token=encoded_token).first()
+    if api_key is not None:
+        if not APIKey.objects.is_valid(encoded_token):
+            logger.warning(
+                "Received an invalid or revoked API token: %s",
+                jwt_decode_no_verification(encoded_token),
+            )
+            raise HasuraError(401, "Received invalid API token", "JWTInvalid")
+        return api_key.user
+
+    payload = get_jwt_payload(encoded_token)
+    if not payload or "sub" not in payload:
+        raise HasuraError(401, "Received invalid API token", "JWTInvalid")
+    try:
+        return User.objects.get(id=payload["sub"])
+    except User.DoesNotExist:
+        logger.warning("Received JWT for a user that does not exist: %s", payload)
+        raise HasuraError(401, "Received invalid API token", "JWTInvalid")

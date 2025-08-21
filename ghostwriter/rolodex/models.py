@@ -276,6 +276,8 @@ class Project(models.Model):
         """
         if user.is_privileged:
             return cls.objects.select_related("client").all().order_by("complete", "client")
+        elif not user.is_authenticated:
+            return cls.objects.none()
         return (
             cls.objects.select_related("client")
             .filter(

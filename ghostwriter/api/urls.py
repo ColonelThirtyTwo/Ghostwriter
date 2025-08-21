@@ -5,6 +5,8 @@ from django.urls import path
 from django.views.decorators.csrf import csrf_exempt
 
 # Ghostwriter Libraries
+from ghostwriter.api.gql.view import GwGraphqlView
+from ghostwriter.api.gql.hasura_compat.schema import schema as hasura_compat_schema
 from ghostwriter.api.views import (
     ApiKeyCreate,
     ApiKeyRevoke,
@@ -43,6 +45,8 @@ from ghostwriter.api.views import (
 app_name = "api"
 
 urlpatterns = [
+    # Graphql
+    path("gql", csrf_exempt(GwGraphqlView.as_view(schema=hasura_compat_schema, graphiql=True)), name="gql"),
     # Actions
     path("test", csrf_exempt(GraphqlTestView.as_view()), name="graphql_test"),
     path("test_event", csrf_exempt(GraphqlEventTestView.as_view()), name="graphql_event_test"),

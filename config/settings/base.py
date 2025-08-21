@@ -112,6 +112,7 @@ THIRD_PARTY_APPS = [
     "health_check.contrib.psutil",
     "health_check.contrib.redis",
     "taggit",
+    "graphene_django",
 ]
 
 LOCAL_APPS = [
@@ -487,10 +488,8 @@ GRAPHQL_JWT = {
     "JWT_ALGORITHM": "HS256",
 }
 
-HASURA_ACTION_SECRET = env(
-    "HASURA_ACTION_SECRET",
-    default="changeme",
-)
+HASURA_ACTION_SECRET = env("HASURA_ACTION_SECRET", default="changeme")
+GRAPHQL_ADMIN_SECRET = env("HASURA_GRAPHQL_ADMIN_SECRET", default=None)
 
 GRAPHQL_HOST = env("HASURA_GRAPHQL_SERVER_HOSTNAME", default="graphql_engine")
 

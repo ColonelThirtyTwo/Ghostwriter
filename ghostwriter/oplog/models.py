@@ -66,10 +66,15 @@ class Oplog(models.Model):
         return self.project.user_can_edit(user)
 
     @classmethod
+    def user_viewable(cls, user, base=None):
+        if not user.is_authenticated:
+            return cls.objects.none()
+        base = cls.objects.all() if base is None else base
+        return base.filter(project__in=Project.for_user(user))
+
+    @classmethod
     def for_user(cls, user):
         qs = cls.objects.select_related("project")
-        if user.is_privileged:
-            return qs
         return qs.filter(project__in=Project.for_user(user))
 
 
@@ -187,6 +192,13 @@ class OplogEntry(models.Model):
 
     def user_can_delete(self, user) -> bool:
         return self.oplog_id.user_can_edit(user)
+
+    @classmethod
+    def user_viewable(cls, user, base=None):
+        if not user.is_authenticated:
+            return cls.objects.none()
+        base = cls.objects.all() if base is None else base
+        return base.filter(oplog_id__in=Oplog.user_viewable(user))
 
     def clean(self, *args, **kwargs):
         if isinstance(self.start_date, str):

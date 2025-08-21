@@ -104,33 +104,10 @@ class HasuraView(View):
     def dispatch(self, request, *args, **kwargs):
         # Only proceed with final dispatch steps if a JWT was acquired
         if self.encoded_token:
-            # Decode the JWT, store the decoded payload, and resolve the user object
-            if APIKey.objects.filter(token=self.encoded_token).exists():
-                if APIKey.objects.is_valid(self.encoded_token):
-                    token_entry = APIKey.objects.get(token=self.encoded_token)
-                    self.user_obj = User.objects.get(id=token_entry.user.id)
-                else:
-                    logger.warning(
-                        "Received an invalid or revoked API token: %s",
-                        utils.jwt_decode_no_verification(self.encoded_token),
-                    )
-                    return JsonResponse(
-                        utils.generate_hasura_error_payload("Received invalid API token", "JWTInvalid"), status=401
-                    )
-            else:
-                payload = utils.get_jwt_payload(self.encoded_token)
-                if payload and "sub" in payload:
-                    try:
-                        self.user_obj = User.objects.get(id=payload["sub"])
-                    except User.DoesNotExist:  # pragma: no cover
-                        logger.warning("Received JWT for a user that does not exist: %s", payload)
-                        return JsonResponse(
-                            utils.generate_hasura_error_payload("Received invalid API token", "JWTInvalid"), status=401
-                        )
-                else:
-                    return JsonResponse(
-                        utils.generate_hasura_error_payload("Received invalid API token", "JWTInvalid"), status=401
-                    )
+            try:
+                self.user_obj = utils.check_token_get_user(self.encoded_token)
+            except utils.HasuraError as e:
+                return e.to_response()
             # Only proceed if user is still active
             if not self.user_obj.is_active:
                 logger.warning("Received JWT for inactive user: %s", self.user_obj.username)
