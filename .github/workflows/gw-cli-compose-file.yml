@@ -18,7 +18,7 @@ jobs:
           set -euxo pipefail
           cd ${{github.workspace}}
           VERSION=$(head -n 1 VERSION)
-          sed -i "s/\\$VERSION/$VERSION/" gw-cli.yml
+          sed -i "s/<VERSION>/$VERSION/" gw-cli.yml
           gh release upload ${{github.event.release.tag_name}} gw-cli.yml
         shell: bash
         env:
